@@ -1,0 +1,66 @@
+---
+title: "Thesis Title"
+subtitle: "Thesis Subtitle"
+date: "`r format(Sys.Date(), '%d. %B %Y')`"
+
+author:
+  - name: "Elias Nodland"
+    affiliation: 1
+
+internal-supervisor:
+  - name: "Hein Meling"
+    affiliation: 1
+
+affiliation:
+  1: "University of Stavanger"
+
+lang: en
+
+toc: true
+lot: true
+lof: true
+loa: true
+has-frontmatter: true
+
+documentclass: book
+papersize: a4
+fontsize: 11pt
+fontfamily: times
+
+fancyhdr:
+    lhead: ""
+    rhead: ""
+
+geometry:
+  - inner=1.5in
+  - outer=1.0in
+  - top=0.8in
+  - bottom=0.6in
+
+headheight: 14pt
+headrulewidth: 0pt
+footrulewidth: 0pt
+
+float:
+  placement:
+    table: H
+    figure: H
+---
+
+```{r setup, echo=F}
+options(tinytex.clean=FALSE) # to keep .aux file so glossary can be extracted
+knitr::opts_chunk$set(echo=F, fig.align='center')
+library(kableExtra)
+
+if (knitr::opts_knit$get("rmarkdown.pandoc.to") == "latex") {
+  kable <- function(data, caption='', col.names=c()) {
+    knitr::kable(data, booktabs=TRUE, digits = 2, format='latex', escape=F, caption=caption, col.names=col.names) %>% 
+      kable_styling(latex_options =c("striped"))
+  }
+} else {
+  kable <- function(data, caption='', col.names=c()) {
+    knitr::kable(data, booktabs = TRUE, digits = 2, escape=F, caption=caption, col.names=col.names, format='markdown') %>%
+      kable_styling(bootstrap_options=c('striped'))
+  }
+}
+```
