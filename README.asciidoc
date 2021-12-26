@@ -15,7 +15,7 @@ You will likely also need `pandoc`. On my system, I run
 
 You will need to have `R` installed on your system as well as a few packages:
 
-.In R
+.In R: `sudo R`
 [source,R]
 ----
 install.packages("rmarkdown")
