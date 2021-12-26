@@ -26,3 +26,28 @@ You should now be able to run `make` from the source directory. The resultant
 pdf-file should be generated as `output/_main.pdf`. This does not include the
 glossary however. If you want the glossaries, run `make pdf-final`. This
 performs two passes over the document to include the glossary list.
+
+== Using Docker
+
+The docker solution is dirty, but in return, it should work on any system.
+It uses a lot of space and the image has to be rebuilt for each time the source
+is changed. Thanks to caching, only the last 2 commands in the dockerfile
+consume much time after the initial image is built.
+
+To minimize time spent on building, it may help to have a cached version of the
+image where all the packages are installed:
+
+[source,sh]
+----
+docker build . --tag base-doc # warning, this takes a very long time
+----
+
+As long as this `base-doc` image is kept, future runs of `docker build` should
+take much less time.
+
+[source,sh]
+----
+docker build . --tag tmp    # warning, this takes a very long time on first run.
+docker run tmp > output.pdf
+docker image rm --force tmp # have to rebuild image when source is changed.
+----

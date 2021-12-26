@@ -3,19 +3,19 @@
 locale <- Sys.setlocale("LC_TIME", "C")
 options(tinytex.clean=FALSE) # to keep .aux file so glossary can be extracted
 knitr::opts_chunk$set(echo=F, fig.align='center')
-library(kableExtra)
-
-if (knitr::opts_knit$get("rmarkdown.pandoc.to") == "latex") {
-  kable <- function(data, caption='', col.names=c()) {
-    knitr::kable(data, booktabs=TRUE, digits = 2, format='latex', escape=F, caption=caption, col.names=col.names) %>% 
-      kable_styling(latex_options =c("striped"))
-  }
-} else {
-  kable <- function(data, caption='', col.names=c()) {
-    knitr::kable(data, booktabs = TRUE, digits = 2, escape=F, caption=caption, col.names=col.names, format='markdown') %>%
-      kable_styling(bootstrap_options=c('striped'))
-  }
-}
+# library(kableExtra)
+# 
+# if (knitr::opts_knit$get("rmarkdown.pandoc.to") == "latex") {
+#   kable <- function(data, caption='', col.names=c()) {
+#     knitr::kable(data, booktabs=TRUE, digits = 2, format='latex', escape=F, caption=caption, col.names=col.names) %>% 
+#       kable_styling(latex_options =c("striped"))
+#   }
+# } else {
+#   kable <- function(data, caption='', col.names=c()) {
+#     knitr::kable(data, booktabs = TRUE, digits = 2, escape=F, caption=caption, col.names=col.names, format='markdown') %>%
+#       kable_styling(bootstrap_options=c('striped'))
+#   }
+# }
 ```
 
 ---
