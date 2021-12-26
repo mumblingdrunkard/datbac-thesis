@@ -13,6 +13,9 @@ named `texlive-schema-full` and I install it by running
 You will likely also need `pandoc`. On my system, I run
 `sudo dnf install pandoc`.
 
+If you happen to be using an older version of pandoc, you may also need
+`pandoc-citeproc`.
+
 You will need to have `R` installed on your system as well as a few packages:
 
 .In R: `sudo R`
@@ -28,6 +31,8 @@ glossary however. If you want the glossaries, run `make pdf-final`. This
 performs two passes over the document to include the glossary list.
 
 == Using Docker
+
+NOTE: For preservation only, not recommended for regular use.
 
 The docker solution is dirty, but in return, it should work on any system.
 It uses a lot of space and the image has to be rebuilt for each time the source
