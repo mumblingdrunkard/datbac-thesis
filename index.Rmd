@@ -78,6 +78,7 @@ footrulewidth: 0pt
 bibliography: bibliography.bib
 csl: ieee.csl
 csl-refs: true
+link-citations: true
 ---
 
 ```{r child='ch01-introduction/introduction.Rmd'}
