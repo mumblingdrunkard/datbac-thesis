@@ -262,14 +262,6 @@ $for(bibliography)$
 \addbibresource{$bibliography$}
 $endfor$
 $endif$
-$if(csl-refs)$
-\newlength{\cslhangindent}
-\setlength{\cslhangindent}{1.5em}
-\newenvironment{cslreferences}%
-  {$if(csl-hanging-indent)$\setlength{\parindent}{0pt}%
-  \everypar{\setlength{\hangindent}{\cslhangindent}}\ignorespaces$endif$}%
-  {\par}
-$endif$
 
 $if(title)$
 \title{$title$$if(thanks)$\thanks{$thanks$}$endif$}
@@ -293,10 +285,10 @@ $endif$
 \patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{}{}{}
 \makeatother
 
-\usepackage{titlesec}
-\titleformat{\chapter}[block]{\normalfont\huge\bfseries}{}{0pt}{\LARGE}   
-\titleformat{\section}[block]{\normalfont\huge\bfseries}{}{0pt}{\Large}
-\titlespacing*{\chapter}{0pt}{0pt}{10pt}
+% \usepackage{titlesec}
+% \titleformat{\chapter}[block]{\normalfont\huge\bfseries}{}{0pt}{\LARGE}   
+% \titleformat{\section}[block]{\normalfont\huge\bfseries}{}{0pt}{\Large}
+% \titlespacing*{\chapter}{0pt}{0pt}{10pt}
 
 $if(float)$
 \usepackage{float}
@@ -316,6 +308,7 @@ $if(fancyhdr)$
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \setlength{\headheight}{$if(headheight)$$headheight$$else$15pt$endif$}
+\setlength{\headheight}{$if(footheight)$$footheight$$else$15pt$endif$}
 \fancypagestyle{plain}{
 	\fancyhf{}
 	% \lhead{\thechapter.\ \leftmark}
@@ -336,14 +329,34 @@ $if(fancyhdr)$
 $for(fancyhdr/pairs)$
 \$fancyhdr.key${$fancyhdr.value$}
 $endfor$
-
 	\renewcommand{\headrulewidth}{$if(headrulewidth)$$headrulewidth$$else$0pt$endif$}
 	\renewcommand{\footrulewidth}{$if(footrulewidth)$$footrulewidth$$else$0pt$endif$}
-
 $endif$
 
 \usepackage{titling}
+$if(glossaries)$
 \usepackage[acronym, symbols]{glossaries}
+$endif$
+
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {% don't indent paragraphs
+  \setlength{\parindent}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1 \everypar{\setlength{\hangindent}{\cslhangindent}}\ignorespaces\fi
+  % set entry spacing
+  \ifnum #2 > 0
+  \setlength{\parskip}{#2\baselineskip}
+  \fi
+ }%
+ {}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\maxof{\widthof{#1}}{\csllabelwidth}}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth}{#1}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
 $for(header-includes)$
 $header-includes$
@@ -354,49 +367,74 @@ $endfor$
 
 \begin{document}
 
-\input{latex/terms.tex}
+$if(glossaries)$
+\input{latex/glossary.tex}
 \input{latex/abbreviations.tex}
 \input{latex/symbols.tex}
+$endif$
 
 \pretitle{
 \begin{center}
-\includegraphics[width=2in]{uis-logo-en}\large\\
-    \textbf{
-Faculty of Science and Technology \\
-Department of Electrical Engineering and Computer Science
-    \vspace{8mm}
-    }
+$if(title-page-logo)$
+\includegraphics[width=$if(title-page-logo-width)$$title-page-logo-width$$else$2in$endif$]{$title-page-logo$}\\
+\vspace{4mm}
+$endif$
+$if(title-page-logo-text)$
+\large
+\textbf{
+$for(title-page-logo-text)$
+$title-page-logo-text$$sep$\\
+$endfor$
+\vspace{8mm}
+}
+$endif$
 \LARGE\\
 }
 \posttitle{
 \large
-Bachelor's Thesis in Computer Science by
-\LARGE\\
 $if(author)$
+    $if(author-heading)$
+    $author-heading$
+    $else$
+    Authors
+    $endif$
+\LARGE\\
 $for(author)$
-    $author.name$\textsuperscript{$author.affiliation$}$sep$,\\
+$if(author.name)$
+$author.name$$if(author.affiliation)$\textsuperscript{$author.affiliation$}$endif$
+$else$
+$author$
+$endif$$sep$,\\
 $endfor$
 \vspace{8mm}
 $endif$
 
 $if(internal-supervisor)$
-\large
-Internal Supervisors
-\LARGE\\
-$for(internal-supervisor)$
-    $internal-supervisor.name$\textsuperscript{$internal-supervisor.affiliation$}\\
-$endfor$
-\vspace{8mm}
+    \large
+    Internal Supervisors
+    \LARGE\\
+    $for(internal-supervisor)$
+    $if(internal-supervisor.name)$
+    $internal-supervisor.name$$if(internal-supervisor.affiliation)$\textsuperscript{$internal-supervisor.affiliation$}$endif$
+    $else$
+    $internal-supervisor$
+    $endif$$sep$,\\
+    $endfor$
+    \vspace{8mm}
 $endif$
 
 $if(external-supervisor)$
-\large
-External Supervisors
-\LARGE\\
-$for(external-supervisor)$
-    $external-supervisor.name$\textsuperscript{$external-supervisor.affiliation$}\\
-$endfor$
-\vspace{8mm}
+    \large
+    External Supervisors
+    \LARGE\\
+    $for(external-supervisor)$
+    $if(external-supervisor.name)$
+    $external-supervisor.name$$if(external-supervisor.affiliation)$\textsuperscript{$external-supervisor.affiliation$}$endif$
+    $else$
+    $external-supervisor$
+    $endif$$sep$,\\
+    $endfor$
+    \vspace{8mm}
 $endif$
 
 $if(reviewer)$
@@ -404,7 +442,11 @@ $if(reviewer)$
 Reviewers
 \LARGE\\
 $for(reviewer)$
-    $reviewer.name$\textsuperscript{$reviewer.affiliation$}\\
+    $if(reviewer.name)$
+    $reviewer.name$$if(reviewer.affiliation)$\textsuperscript{$reviewer.affiliation$}$endif$
+    $else$
+    $reviewer$
+    $endif$$sep$,\\
 $endfor$
 \vspace{8mm}
 $endif$
@@ -459,7 +501,7 @@ $endif$
 $if(lof)$
 \listoffigures
 $endif$
-$if(loa)$
+$if(glossaries)$
 \printglossaries
 $endif$
 
@@ -473,19 +515,6 @@ $endif$
 
 $body$
 
-$if(natbib)$
-$if(bibliography)$
-$if(biblio-title)$
-$if(has-chapters)$
-\renewcommand\bibname{$biblio-title$}
-$else$
-\renewcommand\refname{$biblio-title$}
-$endif$
-$endif$
-  \bibliography{$for(bibliography)$$bibliography$$sep$,$endfor$}
-$endif$
-$endif$
-
 $if(biblatex)$
 \printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
 $endif$
@@ -494,3 +523,4 @@ $for(include-after)$
 $include-after$
 $endfor$
 \end{document}
+

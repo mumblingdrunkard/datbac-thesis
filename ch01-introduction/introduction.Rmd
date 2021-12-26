@@ -1,0 +1,9 @@
+# Introduction
+
+Preface for introduction goes here.
+This is an example citation:
+I cite _The RISC-V Instruction Set Manual Volume I: Unprivileged ISA Document Version 20191213_ @rv5vol1.
+I also cite _The RISC-V Instruction Set Manual Volume II: Privileged Architecture Document Version 20211203_ @rv5vol2.
+
+```{r child='sec01-test.Rmd'}
+```

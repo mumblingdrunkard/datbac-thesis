@@ -1,0 +1,28 @@
+= Datbac thesis
+
+This is my thesis, it uses RMarkdown and a very customized pandoc template.
+
+== Compiling this project
+
+You will need a LaTeX environment on your system. If you're on Linux, the
+easiest way to accomplish this is to install `texlive-full` or whatever
+variation is available for your system. On my system (Fedora 35), the package is
+named `texlive-schema-full` and I install it by running
+`sudo dnf install texlive-schema-full`.
+
+You will likely also need `pandoc`. On my system, I run
+`sudo dnf install pandoc`.
+
+You will need to have `R` installed on your system as well as a few packages:
+
+.In R
+[source,R]
+----
+install.packages("rmarkdown")
+install.packages("bookdown")
+----
+
+You should now be able to run `make` from the source directory. The resultant
+pdf-file should be generated as `output/_main.pdf`. This does not include the
+glossary however. If you want the glossaries, run `make pdf-final`. This
+performs two passes over the document to include the glossary list.

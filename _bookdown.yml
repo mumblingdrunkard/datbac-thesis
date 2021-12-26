@@ -1,3 +1,4 @@
 output_dir: output
 new_session: no
 delete_merged_file: true
+rmd_files: []
