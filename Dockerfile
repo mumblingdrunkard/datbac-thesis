@@ -2,7 +2,6 @@ FROM fedora:35
 RUN dnf update --refresh -y
 RUN dnf install texlive-scheme-full pandoc R libcurl make -y
 RUN dnf install libcurl-devel -y
-RUN dnf install libxml2-devel
 RUN dnf install openssl -y
 RUN dnf install openssl-devel -y
 
