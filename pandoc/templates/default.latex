@@ -32,6 +32,7 @@ $endfor$
 ]{$documentclass$}
 
 $if(fontfamily)$
+\usepackage{fontspec}
 \usepackage[$for(fontfamilyoptions)$$fontfamilyoptions$$sep$,$endfor$]{$fontfamily$}
 $else$
 \usepackage{lmodern}
