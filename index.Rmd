@@ -1,4 +1,3 @@
-
 ```{r setup, echo=F}
 locale <- Sys.setlocale("LC_TIME", "C")
 options(tinytex.clean=FALSE) # to keep .aux file so glossary can be extracted
@@ -35,6 +34,7 @@ author:
   - name: "Elias Nodland"
     affiliation: 1
 
+internal-supervisor-heading: "Supervised by"
 internal-supervisor:
   - name: "Hein Meling"
     affiliation: 1
@@ -46,6 +46,7 @@ lang: en
 
 toc: true  # table of contents
 lot: true  # list of tables
+lol: true  # list of listings
 lof: true  # list of figures
 glossaries: true # list of terms
 has-frontmatter: true
@@ -54,6 +55,7 @@ documentclass: book
 papersize: a4
 fontsize: 11pt
 fontfamily: times
+mainfont: Georgia
 
 fancyhdr:
     lhead: ""
@@ -65,15 +67,15 @@ geometry:
   - top=0.6in
   - bottom=0.8in
 
+float:
+  placement:
+    figure: ht
+    table: ht
+
 headheight: 20pt
 footheight: 14pt
 headrulewidth: 0pt
 footrulewidth: 0pt
-
-# float:
-#   placement:
-#     table: H
-#     figure: H
 
 bibliography: bibliography.bib
 csl: ieee.csl
@@ -83,31 +85,31 @@ link-citations: true
 
 ```{r child='ch01-introduction/introduction.Rmd'}
 ```
-\newpage
+\clearpage
 
 ```{r child='ch02-background/background.Rmd'}
 ```
-\newpage
+\clearpage
 
 ```{r child='ch03-related-work/related-work.Rmd'}
 ```
-\newpage
+\clearpage
 
 ```{r child='ch04-architecture/architecture.Rmd'}
 ```
-\newpage
+\clearpage
 
 ```{r child='ch05-implementation/implementation.Rmd'}
 ```
-\newpage
+\clearpage
 
 ```{r child='ch06-discussion/discussion.Rmd'}
 ```
-\newpage
+\clearpage
 
 ```{r child='ch07-conclusion/conclusion.Rmd'}
 ```
-\newpage
+\clearpage
 
 # References {-}
 
