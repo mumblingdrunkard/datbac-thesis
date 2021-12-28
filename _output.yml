@@ -2,6 +2,6 @@ bookdown::pdf_document2:
   latex_engine: xelatex
   keep_tex: false
   template: 'pandoc/templates/default.latex'
-  pandoc_args: "--highlight-style=kate"
+  pandoc_args: "--highlight-style=monochrome"
 
 bookdown::html_document: default
