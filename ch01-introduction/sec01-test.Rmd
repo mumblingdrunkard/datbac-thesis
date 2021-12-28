@@ -1,3 +1,3 @@
-## This is a temporary heading
+## This is a test section
 
-Test text, lorem ipsum.
+Lorem ipsum dolor sit amet.
