@@ -1,7 +1,7 @@
 bookdown::pdf_document2:
   latex_engine: xelatex
-  keep_tex: false
+  keep_tex: true
   template: 'pandoc/templates/default.latex'
-  pandoc_args: "--highlight-style=monochrome"
+  pandoc_args: ["--listings"]
 
 bookdown::html_document: default
