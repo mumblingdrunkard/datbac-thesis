@@ -5,6 +5,9 @@ RUN dnf install libcurl-devel -y
 RUN dnf install openssl -y
 RUN dnf install openssl-devel -y
 
+# for microsoft fonts
+RUN dnf install curl cabextract xorg-x11-font-utils fontconfig -y
+RUN rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
 
 RUN R -e "install.packages(c('rmarkdown', 'bookdown', 'httr', 'kableExtra'), repos='https://cloud.r-project.org/')"
 
