@@ -1,3 +1,4 @@
-
 output
-_main.html
+_main.*
+*.log
+_bookdown_files/
