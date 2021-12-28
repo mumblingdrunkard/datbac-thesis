@@ -32,7 +32,6 @@ $endfor$
 ]{$documentclass$}
 
 $if(fontfamily)$
-\usepackage{fontspec}
 \usepackage[$for(fontfamilyoptions)$$fontfamilyoptions$$sep$,$endfor$]{$fontfamily$}
 $else$
 \usepackage{lmodern}
@@ -59,6 +58,7 @@ $endif$
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
 $if(mainfont)$
+  \usepackage{fontspec}
   \setmainfont[$for(mainfontoptions)$$mainfontoptions$$sep$,$endfor$]{$mainfont$}
 $endif$
 $if(sansfont)$
@@ -160,6 +160,10 @@ $if(listings)$
 \newcommand{\passthrough}[1]{#1}
 \lstset{defaultdialect=[5.3]Lua}
 \lstset{defaultdialect=[x86masm]Assembler}
+\lstset{frame=shadowbox,linewidth=0.9\linewidth}
+\lstset{captionpos=b}
+\lstset{basicstyle=\small}
+\lstset{float=h}
 $endif$
 $if(lhs)$
 \lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small\ttfamily}}{}
@@ -291,6 +295,17 @@ $endif$
 % \titleformat{\section}[block]{\normalfont\huge\bfseries}{}{0pt}{\Large}
 % \titlespacing*{\chapter}{0pt}{0pt}{10pt}
 
+% for code block captions
+\usepackage{caption}
+\usepackage{floatrow}
+
+\DeclareNewFloatType{chunk}{placement=H, fileext=chk, name=}
+\captionsetup{options=chunk}
+\renewcommand{\thechunk}{Chunk~\thechapter.\arabic{chunk}}
+\makeatletter
+\@addtoreset{chunk}{chapter}
+\makeatother
+
 $if(float)$
 \usepackage{float}
 $if(float.placement)$
@@ -301,7 +316,7 @@ $endif$
 $endif$
 
 \usepackage{authblk}
-\author{}
+\author{} % easy hack so \maketitle doesn't print the author
 
 \date{$date$}
 
@@ -338,6 +353,7 @@ $endif$
 $if(glossaries)$
 \usepackage[acronym, symbols]{glossaries}
 $endif$
+\usepackage[labelfont=bf]{caption}
 
 \newlength{\cslhangindent}
 \setlength{\cslhangindent}{1.5em}
@@ -378,6 +394,11 @@ $endfor$
 \makeglossaries
 
 \begin{document}
+
+\raggedbottom
+\renewcommand{\lstlistingname}{Code Listing}
+\renewcommand{\lstlistlistingname}{List of \lstlistingname s}
+
 
 $if(glossaries)$
 \input{latex/glossary.tex}
@@ -423,7 +444,11 @@ $endif$
 
 $if(internal-supervisor)$
     \large
+    $if(internal-supervisor-heading)$
+    $internal-supervisor-heading$
+    $else$
     Internal Supervisors
+    $endif$
     \LARGE\\
     $for(internal-supervisor)$
     $if(internal-supervisor.name)$
@@ -437,7 +462,11 @@ $endif$
 
 $if(external-supervisor)$
     \large
+    $if(external-supervisor-heading)$
+    $external-supervisor-heading$
+    $else$
     External Supervisors
+    $endif$
     \LARGE\\
     $for(external-supervisor)$
     $if(external-supervisor.name)$
@@ -451,7 +480,11 @@ $endif$
 
 $if(reviewer)$
 \large
+$if(reviewer-heading)$
+$reviewer-heading$
+$else$
 Reviewers
+$endif$
 \LARGE\\
 $for(reviewer)$
     $if(reviewer.name)$
@@ -512,6 +545,9 @@ $if(lot)$
 $endif$
 $if(lof)$
 \listoffigures
+$endif$
+$if(lol)$
+\lstlistoflistings
 $endif$
 $if(glossaries)$
 \printglossaries
