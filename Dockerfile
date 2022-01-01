@@ -1,3 +1,4 @@
+# NOTE: Should probably be using something more stable than fedora, but I couldn't get Ubuntu to work.
 FROM fedora:35
 RUN dnf update --refresh -y
 RUN dnf install texlive-scheme-full pandoc R libcurl make -y
