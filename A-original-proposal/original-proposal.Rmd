@@ -78,16 +78,16 @@ However, we are open to other ideas and designs as well, e.g. based on Xv6 or so
 
 ### Reading material {-}
 
-- [Operating Systems: Three Easy Pieces](https://pages.cs.wisc.edu/~remzi/OSTEP/)
+- [Operating Systems: Three Easy Pieces](https://pages.cs.wisc.edu/~remzi/OSTEP/)^[https://pages.cs.wisc.edu/~remzi/OSTEP/] @ostep-web
 
-- [Xv6, a simple Unix-like teaching operating system](https://pdos.csail.mit.edu/6.828/2012/xv6.html)
+- [Xv6, a simple Unix-like teaching operating system](https://pdos.csail.mit.edu/6.828/2012/xv6.html)^[https://pdos.csail.mit.edu/6.828/2012/xv6.html] @xv6old
 
-- [Nachos Instructional Operating System](https://homes.cs.washington.edu/~tom/nachos/)
+- [Nachos Instructional Operating System](https://homes.cs.washington.edu/~tom/nachos/)^[https://homes.cs.washington.edu/~tom/nachos/] @nachos-web
 
-- [Pintos](https://pintos-os.org/)
+- [Pintos](https://pintos-os.org/)^[https://pintos-os.org/] @pintos-web
 
-- [Go Wiki about Test Comments](https://github.com/golang/go/wiki/TestComments)
+- [Go Wiki about Test Comments](https://github.com/golang/go/wiki/TestComments)^[https://github.com/golang/go/wiki/TestComments] @go-testcomments
 
-- [Go Wiki about Code Review](https://github.com/golang/go/wiki/CodeReviewComments)
+- [Go Wiki about Code Review](https://github.com/golang/go/wiki/CodeReviewComments)^[https://github.com/golang/go/wiki/CodeReviewComments] @go-codereview
 
-- [SOLID Principles in Go](https://dave.cheney.net/2016/08/20/solid-go-design) (see also YouTube video linked herein)
+- [SOLID Principles in Go](https://dave.cheney.net/2016/08/20/solid-go-design)^[https://dave.cheney.net/2016/08/20/solid-go-design] @solid-go (see also YouTube video linked herein)
