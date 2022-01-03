@@ -514,14 +514,19 @@ $endif$
 
 $if(title)$
 \maketitle
+\cleardoublepage
 $endif$
 
 \input{preface/copyright.tex}
+\cleardoublepage
 
 \pagenumbering{roman}
 
 \input{preface/abstract.tex}
+\cleardoublepage
 \input{preface/acknowledgements.tex}
+
+\cleardoublepage
 
 $for(include-before)$
 $include-before$
@@ -540,6 +545,8 @@ $endif$
 }
 $endif$
 
+\clearpage
+
 $if(lot)$
 \listoftables
 $endif$
@@ -553,19 +560,19 @@ $if(glossaries)$
 \printglossaries
 $endif$
 
+\cleardoublepage
+
 $if(linestretch)$
 \setstretch{$linestretch$}
 $endif$
-
-\newpage
 
 \pagenumbering{arabic}
 
 $body$
 
-$if(biblatex)$
-\printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
-$endif$
+% $if(biblatex)$
+% \printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
+% $endif$
 
 $for(include-after)$
 $include-after$
