@@ -1,9 +1,11 @@
 # Introduction
 
-Operating systems are ingrained in daily life.
-Operating systems run at the core of handheld devices such as phones and tablets, in laptop and desktop computers, or even on top of other operating systems such as in virtual machines on cloud servers.
+Operating systems are ingrained in daily life, running at the core of handheld devices such as phones and tablets, in laptop and desktop computers, or even on top of other operating systems such as in virtual machines on cloud servers.
 Even the tiniest microcontrollers in a modern car are likely running some kind of real time operating system (\acrshort{rtos}).
-We use these systems without much thought thanks to a series of clever abstractions.
+It is practically impossible to live modern life without interacting with an operating system.
+Small processors are embedded in everything and "where there's smoke there's fire"; the proverbial smoke being a processor and the proverbial fire being an operating system.
+We use these systems without much thought however.
+This is thanks to a series of clever abstractions letting us think about the machine as a useful tool for running applications and not a pile of copper and silicon through which electricity is passed.
 We do not think about how the mouse and keyboard are polled a thousand times each second, nor do we worry about how this input is processed by our favorite word processor.
 We just use the devices.
 
@@ -18,9 +20,6 @@ This is perhaps a good thing as it is a moderately advanced topic and often requ
 However, there is valuable knowledge to be taken from the design and implementation of operating systems and how they interact with other layers of an average computer.
 
 Is it then possible to teach the concepts of operating systems with theory and practice _without_ teaching all of computer architecture and _without_ building from the ground up? How early can this subject be introduced?
-
-```{r child='sec00-test.Rmd'}
-```
 
 ```{r child='sec01-current-situation.Rmd'}
 ```
