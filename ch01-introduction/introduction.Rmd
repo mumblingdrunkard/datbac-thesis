@@ -1,9 +1,26 @@
 # Introduction
 
-Preface for introduction goes here.
-This is an example citation:
-I cite _The RISC-V Instruction Set Manual Volume I: Unprivileged ISA Document Version 20191213_ @rv5vol1.
-I also cite _The RISC-V Instruction Set Manual Volume II: Privileged Architecture Document Version 20211203_ @rv5vol2.
+Operating systems are ingrained in daily life.
+Operating systems run at the core of handheld devices such as phones and tablets, in laptop and desktop computers, or even on top of other operating systems such as in virtual machines on cloud servers.
+Even the tiniest microcontrollers in a modern car are likely running some kind of real time operating system (\acrshort{rtos}).
+We use these systems without much thought thanks to a series of clever abstractions.
+We do not think about how the mouse and keyboard are polled a thousand times each second, nor do we worry about how this input is processed by our favorite word processor.
+We just use the devices.
 
-```{r child='sec01-test.Rmd'}
+Even those skilled in _The Art of Computer Programming_ @taocp can usually be oblivious to the inner workings of the machine.
+The operating system has abstracted the hardware in such a way that the average programmer doesn't worry about machine code, address translation, virtualisation, etc..
+The programmer doesn't worry about how, when a system call is made, the \acrshort{cpu} executes a trap-instruction to escalate privileges and return control from user/application-mode to the underlying system.
+A computer programmer does not have to be a computer engineer or architect.
+They just use the computer.
+
+Evidently, the implementation details of an operating system are not required knowledge for the vast majority of people.
+This is perhaps a good thing as it is a moderately advanced topic and often requires intermediate knowledge of computer architecture.
+However, there is valuable knowledge to be taken from the design and implementation of operating systems and how they interact with other layers of an average computer.
+
+Is it then possible to teach the concepts of operating systems with theory and practice _without_ teaching all of computer architecture and _without_ building from the ground up? How early can this subject be introduced?
+
+```{r child='sec00-test.Rmd'}
+```
+
+```{r child='sec01-current-situation.Rmd'}
 ```
