@@ -67,8 +67,6 @@ a. Though it's probably best to stick with one.
        i. Them
    (a) Very cool!
 
-\newpage
-
 ### Theorems and proofs
 
 Bookdown supplies very nice facilities for theorems^[Other environments that behave in a similar manner include lemma, corollary, proposition, conjecture, definition, example, exercise, and hypothesis.]:
