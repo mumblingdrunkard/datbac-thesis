@@ -77,6 +77,7 @@ footheight: 14pt
 headrulewidth: 0pt
 footrulewidth: 0pt
 
+biblatex: true
 bibliography: bibliography.bib
 csl: ieee.csl
 csl-refs: true
