@@ -1,0 +1,4 @@
+## Current situation
+
+This thesis is written for and under guidance of The University of Stavanger (\acrshort{uis}).
+The current situation at UiS is that operating systems are introduced as part of the course _Operating Systems and Systems Programming - DAT320_.
