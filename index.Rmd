@@ -55,7 +55,7 @@ documentclass: book
 papersize: a4
 fontsize: 11pt
 fontfamily: times
-mainfont: Georgia
+# mainfont: Georgia
 
 fancyhdr:
     lhead: ""
@@ -85,32 +85,39 @@ link-citations: true
 
 ```{r child='ch01-introduction/introduction.Rmd'}
 ```
-\clearpage
+\cleardoublepage
 
 ```{r child='ch02-background/background.Rmd'}
 ```
-\clearpage
+\cleardoublepage
 
 ```{r child='ch03-related-work/related-work.Rmd'}
 ```
-\clearpage
+\cleardoublepage
 
 ```{r child='ch04-architecture/architecture.Rmd'}
 ```
-\clearpage
+\cleardoublepage
 
 ```{r child='ch05-implementation/implementation.Rmd'}
 ```
-\clearpage
+\cleardoublepage
 
 ```{r child='ch06-discussion/discussion.Rmd'}
 ```
-\clearpage
+\cleardoublepage
 
 ```{r child='ch07-conclusion/conclusion.Rmd'}
 ```
-\clearpage
+\cleardoublepage
 
 # References {-}
 
 <div id="refs"></div>
+
+\cleardoublepage
+
+# (APPENDIX) Appendices {-}
+
+```{r child='A-original-proposal/original-proposal.Rmd'}
+```
