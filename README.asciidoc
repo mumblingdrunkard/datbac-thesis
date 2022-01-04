@@ -24,6 +24,7 @@ You will need to have `R` installed on your system as well as a few packages:
 install.packages("rmarkdown")
 install.packages("bookdown")
 install.packages("kableExtra")
+install.packages("tufte")
 ----
 
 It is likely that the final line will give you some errors.
