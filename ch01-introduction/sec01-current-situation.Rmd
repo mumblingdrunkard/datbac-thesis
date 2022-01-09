@@ -1,18 +1,25 @@
-## Current situation
+## Current situation: The DAT320 course
 
 This thesis is written for and under guidance of The University of Stavanger (\acrshort{uis}).
-The current situation at UiS is that operating systems are introduced as part of the course _Operating Systems and Systems Programming - DAT320_.
-
-### The DAT320 course: Operating Systems and Systems Programming
+The current situation at UiS is that operating systems concepts are introduced as part of the course _Operating Systems and Systems Programming - DAT320_.
 
 > "The course gives an introduction to operating systems, how to implement them, and how to program against them efficiently, with particular focus on thread programming and synchronization between threads within a program."
 >
 > `r tufte::quote_footer('--- Course description for study year 2021-2022 @dat320-web')`
 
+This course is taught using Go @gobook, and some C. @k&r
+
+### Prerequisites
+
 At the time of writing, this is a third semester course and the required and recommended prerequisites are as follows: @dat320-web
 
 - ING100 Introductory course for engineers - Computer science and electrical engineering, and
-- DAT110 Introduction to Programming.
+- DAT110 Introduction to Programming,
 
-The ING100 course uses/used MATLAB while the DAT110 course uses/used Python.
+which appeared as first and second semester courses, utilising MATLAB and Python respectively.
+
+### DAT320 learning outcomes
+
+### Teaching methodology
+
 

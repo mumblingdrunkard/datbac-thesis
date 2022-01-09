@@ -20,5 +20,84 @@ However, there is valuable knowledge to be taken from the design and implementat
 
 Is it then possible to teach the concepts of operating systems with theory and practice _without_ teaching all of computer architecture and _without_ building from the ground up? How early can this subject be introduced?
 
-```{r child='sec01-current-situation.Rmd'}
+## What should I cover in the thesis? (TEMPORARY)
+
+Questions:
+
+- Why Go?
+- Why emulation/simulation?
+- Why a virtual CPU?
+- Why RISC-V?
+- Why 32 bit?
+- Why caching?
+- Why mmio?
+- Why multicore?
+- Why C?
+
+Background
+
+- nachos
+- pintos
+- xv6
+- minix
+- biscuitos
+
+Advantages of the chosen methodology
+
+- Go is higher level than C and generally easier to get started with
+- Possible to run real code on top of the OS
+- Can directly interact with _a_ processor and experiment with it
+- Transparently view how programs interact with the OS
+
+About Go
+
+About C
+
+About RISC-V
+
+What should the labs cover and why?
+
+1. The process
+1. Scheduling
+   - Batch scheduling
+   - Scheduling metrics
+   - SJF scheduling (a form of batch scheduling)
+   - Preemptive schedulers (SRJF, RR, Stride)
+   - Modern schedulers (MLFQ, O(1), Brainfuck)
+1. Memory virtualisation
+   - Base/bounds
+   - Segmentation (base/bound extension)
+   - Memory protection (read/write/exec flags, uncached?)
+   - Paging
+1. The process, revisited
+   - Reclaiming resources when a process ends
+1. C runtime?
+   - syscalls
+     - fork/exec
+     - read/write
+     - brk/sbrk
+   - allocators
+     - malloc/free
+1. File system
+   - File descriptors
+   - Buffers
+   - Directories
+   - Memory mapped files
+   - The file system interface
+1. The process, revisited... again
+   - Reclaiming more resources when the process ends
+
+Framework implementation:
+
+- Structure
+- Architecture
+- Composition
+- Implementation
+
+Reference implementation of lab assignments
+
+```{r child='sec-current-situation.Rmd'}
+```
+
+```{r child='sec-evaluation-of-situation.Rmd'}
 ```
