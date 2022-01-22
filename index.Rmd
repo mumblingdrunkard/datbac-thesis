@@ -15,6 +15,8 @@ if (knitr::opts_knit$get("rmarkdown.pandoc.to") == "latex") {
       kable_styling(bootstrap_options=c('striped'))
   }
 }
+
+library(DiagrammeR)
 ```
 
 ---
@@ -55,7 +57,6 @@ documentclass: book
 papersize: a4
 fontsize: 11pt
 fontfamily: times
-# mainfont: Georgia
 
 fancyhdr:
     lhead: ""
@@ -82,35 +83,41 @@ bibliography: bibliography.bib
 csl: ieee.csl
 csl-refs: true
 link-citations: true
+always_allow_html: true
+
+# links are added as footnotes
+header-includes:
+  - \let\oldhref\href 
+  - \renewcommand{\href}[2]{#2\footnote{\url{#1}}}
 ---
 
 ```{r child='ch01-introduction/introduction.Rmd'}
 ```
-\cleardoublepage
+\clearpage
 
 ```{r child='ch02-background/background.Rmd'}
 ```
-\cleardoublepage
+\clearpage
 
 ```{r child='ch03-related-work/related-work.Rmd'}
 ```
-\cleardoublepage
+\clearpage
 
 ```{r child='ch04-architecture/architecture.Rmd'}
 ```
-\cleardoublepage
+\clearpage
 
 ```{r child='ch05-implementation/implementation.Rmd'}
 ```
-\cleardoublepage
+\clearpage
 
 ```{r child='ch06-discussion/discussion.Rmd'}
 ```
-\cleardoublepage
+\clearpage
 
 ```{r child='ch07-conclusion/conclusion.Rmd'}
 ```
-\cleardoublepage
+\clearpage
 
 # References {-}
 

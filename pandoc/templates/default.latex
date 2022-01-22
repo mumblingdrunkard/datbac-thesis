@@ -349,11 +349,11 @@ $endfor$
 	\renewcommand{\footrulewidth}{$if(footrulewidth)$$footrulewidth$$else$0pt$endif$}
 $endif$
 
-\usepackage{titling}
 $if(glossaries)$
 \usepackage[acronym, symbols]{glossaries}
 $endif$
 \usepackage[labelfont=bf]{caption}
+\usepackage{titling}
 
 \newlength{\cslhangindent}
 \setlength{\cslhangindent}{1.5em}
@@ -405,6 +405,7 @@ $if(glossaries)$
 \input{latex/abbreviations.tex}
 \input{latex/symbols.tex}
 $endif$
+
 
 \pretitle{
 \begin{center}
@@ -506,7 +507,8 @@ $endfor$
 \vspace{8mm}
 $endif$
 
-\end{center}}
+\end{center}
+}
 
 \pagenumbering{gobble}
 

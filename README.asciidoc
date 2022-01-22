@@ -67,7 +67,6 @@ take much less time.
 
 [source,sh]
 ----
-docker build . --tag tmp    # warning, this takes a very long time on first run.
-docker run tmp > output.pdf
-docker image rm --force tmp # have to rebuild image when source is changed.
+docker build . --tag tmp --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} # warning, this takes a very long time on first run.
+docker run tmp > output.pdf # Should clone the latest version of the repo and make it
 ----

@@ -5,21 +5,42 @@ The current situation at UiS is that operating systems concepts are introduced a
 
 > "The course gives an introduction to operating systems, how to implement them, and how to program against them efficiently, with particular focus on thread programming and synchronization between threads within a program."
 >
-> `r tufte::quote_footer('--- Course description for study year 2021-2022 @dat320-web')`
+> `r tufte::quote_footer('--- Course description for study year 2021-2022. @dat320-web')`
 
 This course is taught using Go @gobook, and some C. @k&r
 
 ### Prerequisites
 
+To gain an idea of what prior knowledge can be expected of students, it is a good idea to look at the prerequisites for the course.
 At the time of writing, this is a third semester course and the required and recommended prerequisites are as follows: @dat320-web
 
 - ING100 Introductory course for engineers - Computer science and electrical engineering, and
 - DAT110 Introduction to Programming,
 
-which appeared as first and second semester courses, utilising MATLAB and Python respectively.
+which appear as first and second semester courses, utilising MATLAB and Python respectively.
+While these languages are certainly useful, they don't require, nor give much intuition about computer architecture.
 
-### DAT320 learning outcomes
+### DAT320 learning outcomes @dat320-web
+
+At the time of writing, these are the currently listed learning outcomes.
+
+> *Knowledge:*
+>
+> - How an operating system works
+> - How to protect the operating system from malicious software
+>
+> *Skills:*
+>
+> - Be capable of programming against the operating system API
+> - Be capable of programming parts of an operating system
+> - Be capable of implementing simple mechanisms for resourse management
+> - Know how to program with threads
+> - Know how to exploit virtualization for resource management
+>
+> *General competency*
+>
+> - Know important general principles for resource management for computer systems.
 
 ### Teaching methodology
 
-
+The current course is taught through a series of lectures and lab-assignments, and uses parts of the book _Operating Systems: Three Easy Pieces_. @ostep

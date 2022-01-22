@@ -95,3 +95,14 @@ Variants of the proof environments include remark and solution.
 :::{.exercise}
 Prove the pythagorean theorem.
 :::
+
+### Diagrams with DiagrammeR and mermaid
+
+See figure \@ref(fig:graph).
+
+```{r graph, fig.cap="A graph created with mermaid"}
+mermaid("
+graph LR
+    A-->B
+")
+```

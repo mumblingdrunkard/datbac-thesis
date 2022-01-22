@@ -1,1 +1,9 @@
 # Architecture
+
+Gotos is designed around an emulated RISC-V processor, possibly running multiple cores.
+Each core runs as a goroutine and they share some resources like memory and devices.
+Very little is included in the provided framework.
+
+The architecture can be viewed as a RISC-V user-mode processor along with an unspecified kernel-mode processor.
+The two processors often hook into eachother to accomplish tasks that they cannot perform on their own.
+E.g. traps from the user-mode processor will escalate to the privileged unspecified processor to perform things like syscall, handle interrupts, etc. etc..

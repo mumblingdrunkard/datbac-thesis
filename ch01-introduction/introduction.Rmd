@@ -1,16 +1,16 @@
 # Introduction
 
 Operating systems are ingrained in daily life, running at the core of handheld devices such as phones and tablets, in laptop and desktop computers, or even on top of other operating systems such as in virtual machines on cloud servers.
-Even the tiniest microcontrollers in a modern car are likely running some kind of real time operating system (\acrshort{rtos}).
+The tiniest microcontrollers in a modern car are likely running some kind of real time operating system (\acrshort{rtos}).
 It is practically impossible to live modern life without interacting with an operating system.
 We use these systems without much thought however.
-Thanks to a series of clever abstractions we think about the machine as a useful tool for running applications and not a pile of copper and silicon through which electricity is passed.
+Thanks to a series of clever abstractions we think about the machine as a useful tool for running applications and not a pile of copper and silicon through which current is passed.
 We do not think about how the mouse and keyboard are polled a thousand times each second, nor do we worry about how this input is processed by our favorite word processor.
 We just use the devices.
 
-Even those skilled in _The Art of Computer Programming_ @taocp can usually be oblivious to the inner workings of the machine.
+Those skilled in _The Art of Computer Programming_ @taocp can usually be oblivious to the inner workings of the machine.
 The operating system has abstracted the hardware in such a way that the average programmer doesn't worry about machine code, address translation, virtualisation, etc..
-The programmer doesn't worry about how, when a system call is made, the \acrshort{cpu} executes a trap-instruction to escalate privileges and return control from user/application-mode to the underlying system.
+The programmer doesn't worry about how, when a system call is made, the \acrshort{cpu} executes a trap to escalate privileges and return control from user/application-mode to the underlying system.
 A computer programmer does not have to be a computer engineer or architect.
 They just use the computer.
 
@@ -22,7 +22,7 @@ Is it then possible to teach the concepts of operating systems with theory and p
 
 ## What should I cover in the thesis? (TEMPORARY)
 
-Questions:
+*Questions:*
 
 - Why Go?
 - Why emulation/simulation?
@@ -34,70 +34,111 @@ Questions:
 - Why multicore?
 - Why C?
 
-Background
+*Background*
 
 - nachos
+  - TODO
 - pintos
+  - TODO
 - xv6
+  - "A modern reimplementation of Sixth Edition Unix in C for x86 and RISC-V systems."
+    It has been used by multiple courses accross several universities to teach operating systems, e.g. at MIT where it was developed. @xv6
 - minix
+  - Originally a teaching operating system, but the third edition is focused on being a reliable microkernel.
+    An accompanying book has been written for each of the three major versions.
+    Often called _The MINIX Book_, it serves as the main documentation for its respective MINIX version.
+      - _Operating Systems: Design and Implementation 1/e_. @ast1
+      - _Operating Systems: Design and Implementation 2/e_. @ast2
+      - _Operating Systems: Design and Implementation 3/e_. @ast3
+    A (likely modified) version of MINIX is used in the Intel Management Engine that is embedded on all modern processors released by Intel. @ast-intel
 - biscuitos
+  - Was previously explored as an alternative for teaching operating systems in Go.
+    It was found to be infeasible. @nielsen2019
 
-Advantages of the chosen methodology
+*Advantages of the chosen approach*
 
 - Go is higher level than C and generally easier to get started with
 - Possible to run real code on top of the OS
 - Can directly interact with _a_ processor and experiment with it
 - Transparently view how programs interact with the OS
+- Can modify the "hardware" to fit the different labs
+  - TLB miss can be handled in software
+  - Don't need to follow privileged spec when doing paging
+  - Other memory virtualisation techniques can be used
 
-About Go
+*Disadvantages of the chosen approach*
 
-About C
+- Not a "real" system
+- User-mode applications will run at a fraction of the speed
+- Data structures used by the kernel and data structures used by user-mode applications will be stored in different memory.
+    - This is of course different from a "real" system where memory is shared between user-mode and kernel-mode processes
+    - This can also be an advantage as it leads to less complexity for students learning about the subject
 
-About RISC-V
+*About Go*
 
-What should the labs cover and why?
+*About C*
 
-1. The process
-1. Scheduling
-   - Batch scheduling
-   - Scheduling metrics
-   - SJF scheduling (a form of batch scheduling)
-   - Preemptive schedulers (SRJF, RR, Stride)
-   - Modern schedulers (MLFQ, O(1), Brainfuck)
-1. Memory virtualisation
-   - Base/bounds
-   - Segmentation (base/bound extension)
-   - Memory protection (read/write/exec flags, uncached?)
-   - Paging
-1. The process, revisited
-   - Reclaiming resources when a process ends
-1. C runtime?
-   - syscalls
-     - fork/exec
-     - read/write
-     - brk/sbrk
-   - allocators
-     - malloc/free
-1. File system
-   - File descriptors
-   - Buffers
-   - Directories
-   - Memory mapped files
-   - The file system interface
-1. The process, revisited... again
-   - Reclaiming more resources when the process ends
+*About RISC-V*
 
-Framework implementation:
+*What should the labs cover and why?*
+
+1. *The process and the processor*
+    - Short introduction to computer architecture
+    - Assembly instructions
+    - CPU traps
+    - Memory
+    - Memory mapping
+    - Running a program on the CPU
+    - A simple syscall on the CPU
+1. *Scheduling*
+    - Batch scheduling
+    - Scheduling metrics
+    - SJF scheduling (a form of batch scheduling)
+    - Preemptive schedulers (SRJF, RR, Stride)
+    - Modern schedulers (MLFQ, O(1), Brainfuck)
+1. *Memory virtualisation*
+    - Base/bounds
+    - Segmentation (base/bound extension)
+    - Memory protection (read/write/exec flags, uncached?)
+    - Paging
+1. *The process, revisited*
+    - Reclaiming resources when a process ends
+1. *C runtime?*
+    - syscalls
+        - fork/exec
+        - read/write
+        - brk/sbrk
+    - allocators
+        - malloc/free
+1. *Concurrency*
+    - Concurrency in Go
+    - Demo: RISC-V mutex in C
+    - Demo: RISC-V atomic operations
+1. *(ADVANCED) Multicore scheduling*
+    - Concurrent data structures for the kernel
+    - Sharing queues
+    - Core affinity
+    - Cache interactions
+1. *File system*
+    - File descriptors
+    - Buffers
+    - Directories
+    - Memory mapped files
+    - The file system interface
+1. *The process, revisited... again*
+    - Reclaiming more resources when the process ends
+
+*Framework implementation:*
 
 - Structure
 - Architecture
 - Composition
 - Implementation
 
-Reference implementation of lab assignments
+*Reference implementation of lab assignments.*
 
-```{r child='sec-current-situation.Rmd'}
-```
+<!-- ```{r child='sec00-test.Rmd'}
+``` -->
 
-```{r child='sec-evaluation-of-situation.Rmd'}
+```{r child='sec01-current-situation.Rmd'}
 ```
