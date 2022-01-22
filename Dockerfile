@@ -25,8 +25,4 @@ RUN echo ${GITHUB_TOKEN}
 
 RUN git clone https://${GITHUB_TOKEN}@github.com/mumblingdrunkard/datbac-thesis
 
-RUN ls -a
-
-CMD ls -a
-CMD cd datbac-thesis && git pull && make pdf-final
-#CMD ls datbac-thesis/output
+CMD cd datbac-thesis > /dev/null 2>&1 && git pull > /dev/null 2>&1 && make pdf-final > /dev/null 2>&1; cat /doc/datbac-thesis/output/_main.pdf
