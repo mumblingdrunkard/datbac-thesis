@@ -1,24 +1,26 @@
 # Introduction
 
-Operating systems are ingrained in daily life, running at the core of handheld devices such as phones and tablets, in laptop and desktop computers, or even on top of other operating systems such as in virtual machines on cloud servers.
-The tiniest microcontrollers in a modern car are likely running some kind of real time operating system (\acrshort{rtos}).
+Operating systems are ingrained in daily life, running at the core of handheld devices such as phones and tablets, laptops and desktop computers, or even on top of other operating systems such as virtual machines on cloud servers.
+The tiniest microcontrollers in a modern car are likely running some real-time operating system (\acrshort{rtos}).
 It is practically impossible to live modern life without interacting with an operating system.
-We use these systems without much thought however.
-Thanks to a series of clever abstractions we think about the machine as a useful tool for running applications and not a pile of copper and silicon through which current is passed.
-We do not think about how the mouse and keyboard are polled a thousand times each second, nor do we worry about how this input is processed by our favorite word processor.
-We just use the devices.
+We use these systems without much thought, however.
+Thanks to a series of clever abstractions, we think about the machine as a  tool for running applications and not a pile of copper and silicon.
+We do not think about how the mouse and keyboard are polled a thousand times each second, nor do we worry about how our favourite word processor processes this input.
+We use the devices.
 
-Those skilled in _The Art of Computer Programming_ @taocp can usually be oblivious to the inner workings of the machine.
-The operating system has abstracted the hardware in such a way that the average programmer doesn't worry about machine code, address translation, virtualisation, etc..
-The programmer doesn't worry about how, when a system call is made, the \acrshort{cpu} executes a trap to escalate privileges and return control from user/application-mode to the underlying system.
+Those skilled in _The Art of Computer Programming_ @taocp can usually be oblivious to the machine's inner workings.
+The operating system has abstracted the hardware so that the average programmer doesn't worry about machine code, address translation, virtualisation, etc.
+The programmer doesn't worry about how system calls are different from regular functions.
+The system transparently handles the resulting trap exception.
 A computer programmer does not have to be a computer engineer or architect.
-They just use the computer.
+They use the computer.
 
-Evidently, the implementation details of an operating system are not required knowledge for the vast majority of people.
-This is perhaps a good thing as it is a moderately advanced topic and often requires intermediate knowledge of computer architecture.
-However, there is valuable knowledge to be taken from the design and implementation of operating systems and how they interact with other layers of an average computer.
+The implementation details of an operating system are not required knowledge for the vast majority of people.
+That is perhaps a good thing as it is a moderately advanced topic and often requires intermediate knowledge of computer architecture.
+However, we can take valuable knowledge from the design and implementation of operating systems and how they interact with other layers of the average computer.
 
-Is it then possible to teach the concepts of operating systems with theory and practice _without_ teaching all of computer architecture and _without_ building from the ground up? How early can this subject be introduced?
+Is it then possible to teach the concepts of operating systems with theory and practice _without_ teaching all of computer architecture and building from the ground up?
+How early can this subject be introduced?
 
 ## What should I cover in the thesis? (TEMPORARY)
 
@@ -96,11 +98,32 @@ Is it then possible to teach the concepts of operating systems with theory and p
     - SJF scheduling (a form of batch scheduling)
     - Preemptive schedulers (SRJF, RR, Stride)
     - Modern schedulers (MLFQ, O(1), Brainfuck)
+    - Scheduling interaction with caches.
 1. *Memory virtualisation*
     - Base/bounds
     - Segmentation (base/bound extension)
     - Memory protection (read/write/exec flags, uncached?)
     - Paging
+    - Interaction with caches (cache and TLB, invalidation, flushing, etc. etc..)
+        - E.g. flushing parts of, or the entire TLB is required when updating the segment- or page-tables of a process.
+            - (PRESSING): Is there a way to do this without locking on every TLB access?
+            - Perhaps a channel of incoming invalidated ranges?
+            - Atomic load?
+              Like in the fetch-execute cycle where other threads can store a `Halting` state to the core to make it halt.
+              This would instead load something like `Stale` instead and force the core to refresh its segment/paging TLB from common storage.
+              Should the `Stale` variable perhaps be shared so that all cores can be forced to refresh in just a single store?
+              This is potentially a big performance impact due to excessive TLB invalidation.
+              Need a way to invalidate only parts of the TLB?
+            - Look at `sync.Map`.
+    - Questions:
+        - Can segments be relocated?
+            - If yes, how to handle updating the caches.
+                - Should segment numbering be a combination of process ID and segment number?
+                    E.g 24b process ID + 8b segment number.
+                    The 24b process ID could be sent to a channel to invalidate the entire cached address space for that process.
+                    This becomes very hard as the caches are physically indexed.
+                    May need to tag it with the virtual address to recover the new address when flushing.
+        - This is potentially a very large topic and should be covered in a separate lab.
 1. *The process, revisited*
     - Reclaiming resources when a process ends
 1. *C runtime?*
