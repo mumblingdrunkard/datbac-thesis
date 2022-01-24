@@ -10,3 +10,6 @@ pdf-final: # two passes to include glossary
 
 html:
 	R -e "bookdown::render_book('index.Rmd', 'bookdown::html_document2', config_file='_bookdown.yml')"
+
+docker-image:
+	docker build . --tag tmp --build-arg GITHUB_TOKEN=${GITHUB_TOKEN}

@@ -21,7 +21,7 @@ ARG GITHUB_TOKEN
 WORKDIR /doc
 
 ENV GITHUB_TOKEN=$GITHUB_TOKEN
-RUN echo ${GITHUB_TOKEN}
+ENV OPENSSL_CONF=/dev/null
 
 RUN git clone https://${GITHUB_TOKEN}@github.com/mumblingdrunkard/datbac-thesis
 
