@@ -98,11 +98,9 @@ Prove the pythagorean theorem.
 
 ### Diagrams with DiagrammeR and mermaid
 
-See figure \@ref(fig:graph).
-
-```{r graph, fig.cap="A graph created with mermaid"}
+```{r test, fig.cap="A mermaid diagram", fig.width=5}
 mermaid("
 graph LR
-    A-->B
+    A==>B
 ")
 ```

@@ -160,8 +160,8 @@ How early can this subject be introduced?
 
 *Reference implementation of lab assignments.*
 
-<!-- ```{r child='sec00-test.Rmd'}
-``` -->
+```{r child='sec00-test.Rmd'}
+```
 
 ```{r child='sec01-current-situation.Rmd'}
 ```
