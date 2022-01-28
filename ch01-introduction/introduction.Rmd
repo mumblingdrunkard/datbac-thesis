@@ -100,30 +100,8 @@ How early can this subject be introduced?
     - Modern schedulers (MLFQ, O(1), Brainfuck)
     - Scheduling interaction with caches.
 1. *Memory virtualisation*
-    - Base/bounds
-    - Segmentation (base/bound extension)
-    - Memory protection (read/write/exec flags, uncached?)
     - Paging
     - Interaction with caches (cache and TLB, invalidation, flushing, etc. etc..)
-        - E.g. flushing parts of, or the entire TLB is required when updating the segment- or page-tables of a process.
-            - (PRESSING): Is there a way to do this without locking on every TLB access?
-            - Perhaps a channel of incoming invalidated ranges?
-            - Atomic load?
-              Like in the fetch-execute cycle where other threads can store a `Halting` state to the core to make it halt.
-              This would instead load something like `Stale` instead and force the core to refresh its segment/paging TLB from common storage.
-              Should the `Stale` variable perhaps be shared so that all cores can be forced to refresh in just a single store?
-              This is potentially a big performance impact due to excessive TLB invalidation.
-              Need a way to invalidate only parts of the TLB?
-            - Look at `sync.Map`.
-    - Questions:
-        - Can segments be relocated?
-            - If yes, how to handle updating the caches.
-                - Should segment numbering be a combination of process ID and segment number?
-                    E.g 24b process ID + 8b segment number.
-                    The 24b process ID could be sent to a channel to invalidate the entire cached address space for that process.
-                    This becomes very hard as the caches are physically indexed.
-                    May need to tag it with the virtual address to recover the new address when flushing.
-        - This is potentially a very large topic and should be covered in a separate lab.
 1. *The process, revisited*
     - Reclaiming resources when a process ends
 1. *C runtime?*
@@ -131,6 +109,8 @@ How early can this subject be introduced?
         - fork/exec
         - read/write
         - brk/sbrk
+        - open/close/pipe
+        - Look at Xv6 for inspiration
     - allocators
         - malloc/free
 1. *Concurrency*
@@ -159,9 +139,6 @@ How early can this subject be introduced?
 - Implementation
 
 *Reference implementation of lab assignments.*
-
-```{r child='sec00-test.Rmd'}
-```
 
 ```{r child='sec01-current-situation.Rmd'}
 ```
