@@ -1,26 +1,32 @@
 # Introduction
 
-Operating systems are ingrained in daily life, running at the core of handheld devices such as phones and tablets, laptops and desktop computers, or even on top of other operating systems such as virtual machines on cloud servers.
+Operating systems (\acrshort{os}) are ingrained in daily life, running at the core of handheld devices such as phones and tablets, laptops and desktop computers, or even on top of another OS such as virtual machines on cloud servers.
 The tiniest microcontrollers in a modern car are likely running some real-time operating system (\acrshort{rtos}).
-It is practically impossible to live modern life without interacting with an operating system.
+It is practically impossible to live modern life without interacting with an OS.
 We use these systems without much thought, however.
 Thanks to a series of clever abstractions, we think about the machine as a  tool for running applications and not a pile of copper and silicon.
 We do not think about how the mouse and keyboard are polled a thousand times each second, nor do we worry about how our favourite word processor processes this input.
 We use the devices.
 
-Those skilled in _The Art of Computer Programming_ @taocp can usually be oblivious to the machine's inner workings.
-The operating system has abstracted the hardware so that the average programmer doesn't worry about machine code, address translation, virtualisation, etc.
-The programmer doesn't worry about how system calls are different from regular functions.
+Those skilled in _The Art of Computer Programming_ @taocp can usually be oblivious to the machine's true inner workings.
+The OS has abstracted the hardware so that the average programmer does not worry about machine code, address translation, virtualisation, etc.
+The programmer does not have to care about how system calls are different from regular functions.
 The system transparently handles the resulting trap exception.
 A computer programmer does not have to be a computer engineer or architect.
 They use the computer.
 
-The implementation details of an operating system are not required knowledge for the vast majority of people.
+The implementation details of an OS are not required knowledge for the vast majority of people.
 That is perhaps a good thing as it is a moderately advanced topic and often requires intermediate knowledge of computer architecture.
-However, we can take valuable knowledge from the design and implementation of operating systems and how they interact with other layers of the average computer.
+However, we can take valuable knowledge from the design and implementation of OSes and how they interact with other layers of the average computer.
 
-Is it then possible to teach the concepts of operating systems with theory and practice _without_ teaching all of computer architecture and building from the ground up?
+Is it then possible to teach the concepts of OSs with theory and practice _without_ teaching all of computer architecture and building from the ground up?
 How early can this subject be introduced?
+
+In this thesis we present Gotos, a framework for teaching operating system concepts to undergraduate students using Go, a high-level and garbage-collected language.
+We present a multicore RISC-V emulator that executes user-space code, and the abstractions and interfaces that allow students to write their own OS components in Go.
+We also outline challenges that arise due to emulation or running with multiple cores, and propose solutions to these challenges.
+
+<!--
 
 ## What should I cover in the thesis? (TEMPORARY)
 
@@ -36,26 +42,35 @@ How early can this subject be introduced?
 - Why multicore?
 - Why C?
 
-*Background*
+### Background
+
+- Go
+- Nielsen et. al.
+- Meling
+- Current labs
+
+### Related Work
 
 - nachos
-  - TODO
+    - TODO
 - pintos
-  - TODO
+    - TODO
 - xv6
-  - "A modern reimplementation of Sixth Edition Unix in C for x86 and RISC-V systems."
-    It has been used by multiple courses accross several universities to teach operating systems, e.g. at MIT where it was developed. @xv6
+    - "A modern reimplementation of Sixth Edition Unix in C for x86 and RISC-V systems."
+      It has been used by multiple courses accross several universities to teach operating systems, e.g. at MIT where it was developed. @xv6
 - minix
-  - Originally a teaching operating system, but the third edition is focused on being a reliable microkernel.
-    An accompanying book has been written for each of the three major versions.
-    Often called _The MINIX Book_, it serves as the main documentation for its respective MINIX version.
-      - _Operating Systems: Design and Implementation 1/e_. @ast1
-      - _Operating Systems: Design and Implementation 2/e_. @ast2
-      - _Operating Systems: Design and Implementation 3/e_. @ast3
-    A (likely modified) version of MINIX is used in the Intel Management Engine that is embedded on all modern processors released by Intel. @ast-intel
+    - Originally a teaching operating system, but the third edition is focused on being a reliable microkernel.
+      An accompanying book has been written for each of the three major versions.
+      Often called _The MINIX Book_, it serves as the main documentation for its respective MINIX version.
+          - _Operating Systems: Design and Implementation 1/e_. @ast1
+          - _Operating Systems: Design and Implementation 2/e_. @ast2
+          - _Operating Systems: Design and Implementation 3/e_. @ast3
+      A (likely modified) version of MINIX is used in the Intel Management Engine that is embedded on all modern processors released by Intel. @ast-intel
 - biscuitos
-  - Was previously explored as an alternative for teaching operating systems in Go.
-    It was found to be infeasible. @nielsen2019
+    - Was previously explored as an alternative for teaching operating systems in Go.
+      It was found to be infeasible. @nielsen2019
+
+### Discussion
 
 *Advantages of the chosen approach*
 
@@ -64,9 +79,6 @@ How early can this subject be introduced?
 - Can directly interact with _a_ processor and experiment with it
 - Transparently view how programs interact with the OS
 - Can modify the "hardware" to fit the different labs
-  - TLB miss can be handled in software
-  - Don't need to follow privileged spec when doing paging
-  - Other memory virtualisation techniques can be used
 
 *Disadvantages of the chosen approach*
 
@@ -92,6 +104,7 @@ How early can this subject be introduced?
     - Memory mapping
     - Running a program on the CPU
     - A simple syscall on the CPU
+
 1. *Scheduling*
     - Batch scheduling
     - Scheduling metrics
@@ -140,5 +153,7 @@ How early can this subject be introduced?
 
 *Reference implementation of lab assignments.*
 
-```{r child='sec01-current-situation.Rmd'}
+-->
+
+```{r child='01-background.Rmd'}
 ```

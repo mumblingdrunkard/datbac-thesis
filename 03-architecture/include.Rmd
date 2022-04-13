@@ -1,0 +1,16 @@
+# Architecture
+
+To achieve the goal of a unifying framework, we decided to create a processor emulator that executes instructions in user-mode, but leaves the tasks of the operating system to be implemented in a higher-level language.
+This description largely matches that of Nachos which implements a MIPS emulator and leaves OS components to be implemented in C++ or Java.
+
+In this chapter we present the processor emulator included with Gotos and associated architectural decisions.
+It is a plain emulator, primarily inspired by the RISC-V specification.
+
+```{r child="01-riscv.Rmd"}
+```
+
+```{r child="02-other-functionality.Rmd"}
+```
+
+```{r child="03-multicore.Rmd"}
+```

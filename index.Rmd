@@ -1,12 +1,12 @@
 ```{r setup, echo=F}
 locale <- Sys.setlocale("LC_TIME", "C")
 options(tinytex.clean=FALSE) # to keep .aux file so glossary can be extracted
-knitr::opts_chunk$set(echo=F, fig.align='center')
+knitr::opts_chunk$set(echo=F, fig.align='center', out.width='3.5in')
 library(kableExtra)
 
 if (knitr::opts_knit$get("rmarkdown.pandoc.to") == "latex") {
   kable <- function(data, caption='', col.names=c()) {
-    knitr::kable(data, booktabs=TRUE, digits = 2, format='latex', escape=F, caption=caption, col.names=col.names) %>% 
+    knitr::kable(data, booktabs=TRUE, digits = 2, format='latex', escape=F, caption=caption, col.names=col.names) %>%
       kable_styling(latex_options =c("striped"))
   }
 } else {
@@ -20,8 +20,8 @@ library(DiagrammeR)
 ```
 
 ---
-title: "Thesis Title"
-subtitle: "Thesis Subtitle"
+title: "The Gotos framework"
+subtitle: "for teaching operating systems to undergrads"
 date: "`r format(Sys.Date(), '%d. %B %Y')`"
 
 cover-page: "cover.pdf"
@@ -46,27 +46,23 @@ affiliation:
 
 lang: en
 
-toc: true  # table of contents
-lot: true  # list of tables
-lol: true  # list of listings
-lof: true  # list of figures
 glossaries: true # list of terms
 has-frontmatter: true
 
-documentclass: book
+documentclass: report
 papersize: a4
 fontsize: 11pt
 fontfamily: times
 
 fancyhdr:
     lhead: ""
-    rhead: ""
+    rhead: "\\rightmark"
 
 geometry:
   - inner=1.5in
-  - outer=1.0in
-  - top=0.6in
-  - bottom=0.8in
+  - outer=1.5in
+  - top=1.0in
+  - bottom=1.0in
 
 float:
   placement:
@@ -80,6 +76,7 @@ footrulewidth: 0pt
 
 biblatex: true
 bibliography: bibliography.bib
+biblio-style: ieee
 csl: ieee.csl
 csl-refs: true
 link-citations: true
@@ -87,45 +84,94 @@ always_allow_html: true
 
 # links are added as footnotes
 header-includes:
-  - \let\oldhref\href 
+  - \let\oldhref\href
   - \renewcommand{\href}[2]{#2\footnote{\url{#1}}}
 ---
 
-```{r child='ch01-introduction/introduction.Rmd'}
+\pagenumbering{roman}
+
+```{r child='preface/abstract.Rmd'}
 ```
-\clearpage
 
-```{r child='ch02-background/background.Rmd'}
+\cleardoublepage
+
+```{r child='preface/acknowledgements.Rmd'}
 ```
-\clearpage
 
-```{r child='ch03-related-work/related-work.Rmd'}
+\cleardoublepage
+
+\raggedbottom
+
+\tableofcontents
+<!--
+\listoffigures
+\listoftables
+\lstlistoflistings
+\printglossaries
+-->
+
+\cleardoublepage
+
+\pagenumbering{arabic}
+
+# (PART) INTRODUCTION {-}
+
+```{r child='01-introduction/include.Rmd'}
 ```
-\clearpage
 
-```{r child='ch04-architecture/architecture.Rmd'}
+\cleardoublepage
+
+```{r child='02-related-work/include.Rmd'}
 ```
-\clearpage
 
-```{r child='ch05-implementation/implementation.Rmd'}
+# (PART) MAIN BODY {-}
+
+\cleardoublepage
+
+```{r child='03-architecture/include.Rmd'}
 ```
-\clearpage
 
-```{r child='ch06-discussion/discussion.Rmd'}
+\cleardoublepage
+
+```{r child='04-implementation/include.Rmd'}
 ```
-\clearpage
 
-```{r child='ch07-conclusion/conclusion.Rmd'}
+\cleardoublepage
+
+```{r child='05-assignments/include.Rmd'}
 ```
-\clearpage
 
-# References {-}
+\cleardoublepage
 
-<div id="refs"></div>
+# (PART) REFLECTION {-}
+
+```{r child='06-discussion/include.Rmd'}
+```
+
+\cleardoublepage
+
+```{r child='07-conclusion/include.Rmd'}
+```
 
 \cleardoublepage
 
 # (APPENDIX) Appendices {-}
 
-```{r child='A-original-proposal/original-proposal.Rmd'}
+```{r child='A-original-proposal/include.Rmd'}
 ```
+
+\cleardoublepage
+
+```{r child='B-shootdown-alternative/include.Rmd'}
+```
+
+\cleardoublepage
+
+```{r child='C-user-space/include.Rmd'}
+```
+
+\cleardoublepage
+
+# References {-}
+
+<div id="refs"></div>

@@ -36,9 +36,6 @@ $if(fontfamily)$
 $else$
 \usepackage{lmodern}
 $endif$
-$if(linestretch)$
-\usepackage{setspace}
-$endif$
 \usepackage{amssymb,amsmath}
 \usepackage{ifxetex,ifluatex}
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
@@ -104,6 +101,7 @@ $endif$
 \IfFileExists{microtype.sty}{% use microtype if available
   \usepackage[$for(microtypeoptions)$$microtypeoptions$$sep$,$endfor$]{microtype}
   \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+  \usepackage{csquotes}
 }{}
 $if(indent)$
 $else$
@@ -160,13 +158,15 @@ $if(listings)$
 \newcommand{\passthrough}[1]{#1}
 \lstset{defaultdialect=[5.3]Lua}
 \lstset{defaultdialect=[x86masm]Assembler}
-\lstset{frame=shadowbox,linewidth=0.9\linewidth}
 \lstset{captionpos=b}
-\lstset{basicstyle=\small}
+\lstset{frame=tb}
+\lstset{numbers=left}
+\lstset{xleftmargin=5mm,framexleftmargin=5mm}
+\lstset{basicstyle=%
+        \ttfamily
+        \lst@ifdisplaystyle\footnotesize\fi}
+\lstset{showstringspaces=false}
 \lstset{float=h}
-$endif$
-$if(lhs)$
-\lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small\ttfamily}}{}
 $endif$
 $if(highlighting-macros)$
 $highlighting-macros$
@@ -206,7 +206,7 @@ $if(strikeout)$
 $endif$
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+  \setlength{\itemsep}{2pt}\setlength{\parskip}{2pt}}
 $if(numbersections)$
 \setcounter{secnumdepth}{$if(secnumdepth)$$secnumdepth$$else$5$endif$}
 $else$
@@ -257,12 +257,10 @@ $if(dir)$
   \newenvironment{LTR}{\beginL}{\endL}
 \fi
 $endif$
-$if(natbib)$
-\usepackage[$natbiboptions$]{natbib}
-\bibliographystyle{$if(biblio-style)$$biblio-style$$else$plainnat$endif$}
-$endif$
 $if(biblatex)$
 \usepackage[$if(biblio-style)$style=$biblio-style$,$endif$$for(biblatexoptions)$$biblatexoptions$$sep$,$endfor$]{biblatex}
+\appto{\bibsetup}{\raggedright}
+\setlength{\bibitemsep}{1.5\itemsep}
 $for(bibliography)$
 \addbibresource{$bibliography$}
 $endfor$
@@ -272,7 +270,6 @@ $if(title)$
 \title{$title$$if(thanks)$\thanks{$thanks$}$endif$}
 $endif$
 $if(subtitle)$
-\usepackage{etoolbox}
 \makeatletter
 \providecommand{\subtitle}[1]{
   \apptocmd{\@title}{\par {\large #1 \par}}{}{}
@@ -281,18 +278,19 @@ $if(subtitle)$
 \subtitle{$subtitle$}
 $endif$
 
+\usepackage{multicol}
+
 \usepackage[final]{pdfpages}
 
 %% Include custom stuff here
 
-\usepackage{etoolbox}
 \makeatletter
 \patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{}{}{}
 \makeatother
 
-% \usepackage{titlesec}
+\usepackage{titlesec}
 % \titleformat{\chapter}[block]{\normalfont\huge\bfseries}{}{0pt}{\LARGE}   
-% \titleformat{\section}[block]{\normalfont\huge\bfseries}{}{0pt}{\Large}
+\titleformat{\subsubsection}[block]{\normalfont\bfseries}{}{0pt}{}
 % \titlespacing*{\chapter}{0pt}{0pt}{10pt}
 
 % for code block captions
@@ -324,7 +322,6 @@ $if(fancyhdr)$
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \setlength{\headheight}{$if(headheight)$$headheight$$else$15pt$endif$}
-\setlength{\headheight}{$if(footheight)$$footheight$$else$15pt$endif$}
 \fancypagestyle{plain}{
 	\fancyhf{}
 	% \lhead{\thechapter.\ \leftmark}
@@ -356,12 +353,13 @@ $endif$
 \usepackage{titling}
 
 \newlength{\cslhangindent}
-\setlength{\cslhangindent}{1.5em}
+\setlength{\cslhangindent}{1em}
 \newlength{\csllabelwidth}
-\setlength{\csllabelwidth}{3em}
+\setlength{\csllabelwidth}{2em}
 \newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
  {% don't indent paragraphs
   \setlength{\parindent}{0pt}
+  \setlength{\parskip}{6pt}
   % turn on hanging indent if param 1 is 1
   \ifodd #1 \everypar{\setlength{\hangindent}{\cslhangindent}}\ignorespaces\fi
   % set entry spacing
@@ -373,6 +371,7 @@ $endif$
 \newenvironment{cslreferences}[2] % #1 hanging-ident, #2 entry spacing
  {% don't indent paragraphs
   \setlength{\parindent}{0pt}
+  \setlength{\parskip}{6pt}
   % turn on hanging indent if param 1 is 1
   \ifodd #1 \everypar{\setlength{\hangindent}{\cslhangindent}}\ignorespaces\fi
   % set entry spacing
@@ -383,7 +382,7 @@ $endif$
  {}
 \newcommand{\CSLBlock}[1]{#1\hfill\break}
 \newcommand{\CSLLeftMargin}[1]{\parbox[t]{\maxof{\widthof{#1}}{\csllabelwidth}}{#1}}
-\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth-1em-\csllabelwidth}{#1}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
 $for(header-includes)$
@@ -393,11 +392,15 @@ $endfor$
 
 \makeglossaries
 
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{6pt}
+\setlength{\floatsep}{6pt}
+\setlength{\textfloatsep}{6pt}
+\setlength{\intextsep}{6pt}
+
 \begin{document}
 
-\raggedbottom
-\raggedright
-\renewcommand{\lstlistingname}{Code Listing}
+\renewcommand{\lstlistingname}{Listing}
 \renewcommand{\lstlistlistingname}{List of \lstlistingname s}
 
 
@@ -406,7 +409,6 @@ $if(glossaries)$
 \input{latex/abbreviations.tex}
 \input{latex/symbols.tex}
 $endif$
-
 
 \pretitle{
 \begin{center}
@@ -520,14 +522,10 @@ $if(title)$
 \cleardoublepage
 $endif$
 
-\input{preface/copyright.tex}
+\input{latex/copyright.tex}
 \cleardoublepage
 
 \pagenumbering{roman}
-
-\input{preface/abstract.tex}
-\cleardoublepage
-\input{preface/acknowledgements.tex}
 
 \cleardoublepage
 
@@ -535,47 +533,10 @@ $for(include-before)$
 $include-before$
 
 $endfor$
-$if(toc)$
-$if(toc-title)$
-\renewcommand*\contentsname{$toc-title$}
-$endif$
-{
-$if(colorlinks)$
-\hypersetup{linkcolor=$if(toccolor)$$toccolor$$else$$endif$}
-$endif$
-\setcounter{tocdepth}{$toc-depth$}
-\tableofcontents
-}
-$endif$
-
-\clearpage
-
-$if(lot)$
-\listoftables
-$endif$
-$if(lof)$
-\listoffigures
-$endif$
-$if(lol)$
-\lstlistoflistings
-$endif$
-$if(glossaries)$
-\printglossaries
-$endif$
-
-\cleardoublepage
-
-$if(linestretch)$
-\setstretch{$linestretch$}
-$endif$
 
 \pagenumbering{arabic}
 
 $body$
-
-% $if(biblatex)$
-% \printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
-% $endif$
 
 $for(include-after)$
 $include-after$

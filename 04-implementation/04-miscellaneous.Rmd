@@ -1,0 +1,22 @@
+## Miscellaneous
+
+### Counters
+
+### Traps
+
+### IPIs
+
+### Metrics
+
+TODO
+
+Metrics are not emphasised currently
+
+### Environment
+
+If we want to have any hope of a stable target for applications targeting the system, we should define the execution environment.
+This includes
+
+- how system calls are made,
+- system call numbers, and
+- a minimal C runtime.

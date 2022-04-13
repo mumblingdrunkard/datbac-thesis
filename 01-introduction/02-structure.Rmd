@@ -1,0 +1,11 @@
+## Thesis structure
+
+The next chapter covers previous, relevant work that has been done concerning the DAT320 course and other teaching operating systems.
+
+In the proceeding two chapters we describe the architecture and implementation as well as challenges faced.
+These mainly concern the architecture and implementation of the processor emulator, but we also highligt areas where system implementations should be careful.
+
+We propose a set of assignments that use Gotos in the fifth chapter, and how these fit into the current curriculum.
+These assignments, while the
+
+The rest of the thesis is dedicated to reflection and conclusion.

@@ -2,3 +2,5 @@ output/
 _main.*
 *.log
 _bookdown_files/
+
+test.pdf

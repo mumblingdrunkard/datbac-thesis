@@ -1,6 +1,4 @@
-# Original thesis proposal
-
-## A Teaching Operating System based on Simulation for Third Semester Students {-}
+# A Teaching Operating System based on Simulation for Third Semester Students {#app:proposal}
 
 <!--
 ### Administrative {-}
@@ -20,7 +18,7 @@ Become proficient in Go programming.
 Students are expected to review textbook material and various sources to get inspiration for developing the student assignments in this project.
 -->
 
-### Project description {-}
+## Project description {-}
 
 The current assignments in the OS course simulate various aspects of an operating system.
 However,  the different assignments have been built in an ad hoc manner without a unifying framework.
@@ -46,14 +44,14 @@ The tasks of the project include:
 The project is open to a fair bit of flexibility, but the assignments should focus on the topics covered in the lectures and be related to by the textbook that we currently use.
 In particular, the students should examine all the exercises in the most relevant chapters, and also the Systems Labs in Appendix G, for inspiration.
 
-### Expectations {-}
+## Expectations {-}
 
 The project is expected to produce high-quality Go code, following the established design principles (SOLID) and idiomatic Go and should follow the guidelines linked below.
 Furthermore, the project should describe the tasks (the `README.md` files), following the template of the existing labs, and the project is also expected to produce a solution, student skeleton and tests for students and Quickfeed tests.
 The assignments may also include multiple choice or other similar types of evaluations.
 Alternative evaluation types could also involve some integration with Quickfeed's frontend or a plugin for VSCode.
 
-### Some Idea Sketches {-}
+## Some Idea Sketches {-}
 
 Below are some ideas based on our current assignments. 
 However, we are open to other ideas and designs as well, e.g. based on Xv6 or some other teaching OS.
@@ -76,7 +74,7 @@ However, we are open to other ideas and designs as well, e.g. based on Xv6 or so
 
 - It would be cool if the process abstraction could be used to implement a terminal shell, or some other interesting applications, inside their own OS.
 
-### Reading material {-}
+## Reading material {-}
 
 - [Operating Systems: Three Easy Pieces](https://pages.cs.wisc.edu/~remzi/OSTEP/) @ostep-web
 

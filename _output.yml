@@ -1,5 +1,5 @@
 bookdown::pdf_document2:
-  latex_engine: xelatex
+  latex_engine: pdflatex
   keep_tex: true
   template: 'pandoc/templates/default.latex'
   pandoc_args: ["--listings"]

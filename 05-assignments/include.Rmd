@@ -1,0 +1,85 @@
+# The assignments
+
+We take a different approach from the lab-assignments of yesteryear, providing ones that are mostly guided.
+We do this because we believe that by *pulling* the students through the labs instead of *pushing*, we will be able to cover more material.
+This guidance is also somewhat necessitated by the sheer complexity of Gotos.
+
+We have only dedicated effort to creating assignments for Gotos and not for the entire DAT320 course.
+The idea is that these few assigmnents will replace the current assignments that revolve around implementing OS components.
+Mainly because there are already good labs in place for the parts that we don't cover.
+
+All assignments can be found in appendix [TODO]
+
+## Assignment - The processor
+
+This assignment should cover the basics of the emulated processor:
+
+- registers,
+- instructions and some basic assembly,
+- how programs are stored in memory,
+- how to run programs in Gotos,
+- processes, queues, and simple scheduling,
+- simple system calls.
+
+## Assignment - Scheduling and scheduler metrics
+
+After covering the mechanisms of scheduling and process execution, this assignments should cover more sophisticated scheduling policies.
+
+Keywords:
+
+- fifo,
+- preemption,
+- response time,
+- turnaround time,
+- sjf,
+- rr,
+- fair schedulers.
+
+
+
+## Assignment - Memory virtualisation and management
+
+This assignment should cover the basics of memory virtualisation and management using paged memory systems.
+
+Keywords:
+
+- the Sv32 format,
+- creating a page-table,
+- enabling paging,
+- caveats
+    - TLB flushing
+- allocating pages,
+    - `page_map()` and `page_unmap()`
+- managing frames.
+
+
+## Assignment - Processes and threads
+
+With paging enabled and frame management covered, this lab should cover more advanced process interactions and we expand the process with new capabilities.
+
+Keywords:
+
+- `fork()`,
+- `exec()`,
+- `spawn()`, and
+- `join()`.
+
+
+## Assignment - Interlude: concurrency in (single core) userland
+
+With threads covered, this assignment should cover how programs executing on top of Gotos can achieve correct concurrent execution using locks and atomics.
+
+Keywords:
+
+- Mutex
+- Atomics
+
+
+## Assignment - (ADVANCED) Multicore I
+
+A proposed assignment that should introduce the problems encountered when executing accross multiple cores.
+
+Keywords:
+
+- TLB shootdown
+    - `page_unmap()` in a multithreaded process.

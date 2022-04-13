@@ -1,0 +1,23 @@
+# Related work
+
+- Nielsen et. al. 2019
+
+- Nachos
+
+- Xv6
+
+## Nachos
+
+Nachos is an instructional OS
+
+## Xv6 {#sec:02-xv6}
+
+Xv6 is a popular teaching OS, developed at MIT
+
+## Nielsen et al. 2019 -- Biscuit
+
+An earlier bachelor's project from 2019 looked into using Biscuit -- a research OS written with Go and assembly -- as a base to teach OS concepts.
+The goal was to be able to use Go to write OS components through a series of lab-assignments.
+Go, having garbage collection and a strong standard library, is easier for new students than a language like C or C++ as used in Xv6 or Nachos.
+
+Biscuit is not written to be an intstructional operating system, and from all the challenges faced, it was found to be unsuitable for use in the class.

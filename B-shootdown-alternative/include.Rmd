@@ -1,0 +1,13 @@
+# An alternative to TLB shootdowns {#ap:shootdown-alternative}
+
+An issue that must be dealt with in operating systems that manage multithreaded processes in multicore systems, is TLB synchronisation in critical cases such as when a process unmaps a page.
+
+For example, one solution that side-steps TLB shootdowns is to mark the page as neither free, nor allocated, but introduce a third queue that states the frame is in the process of being freed.
+We will call this list *referenced*.
+When frames are initially put into this list, they are marked with $N$ bits set where $N$ is the number of cores.
+Entries should also be marked with some metadata so that cores may avoid flushing their full cache.
+The core that puts it on the list will atomically unset the bit that corresponds to this core.
+Cores should, semi-regularly be interrupted so that context-switching can occur.
+When this happens, the referenced-list can be iterated over and, if a frame is found with the right bit set for the current core, the core should invalidate the corresponding translation using `c.SFENCE_VMA()` and atomically unset the corresponding bit.
+After this is done, the core should check if the bits for other cores are also unset, in which case the routine can finally mark the page as free.
+This becomes a form of lazy freeing.

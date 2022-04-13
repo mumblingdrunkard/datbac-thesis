@@ -89,7 +89,6 @@ This is a proof.
 The end of a proof is marked with a square.
 :::
 
-
 Variants of the proof environments include remark and solution.
 
 :::{.exercise}

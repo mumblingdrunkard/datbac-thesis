@@ -1,0 +1,60 @@
+## Structuring the code
+
+Most of the provided code exists inside the `cpu` package.
+Some system code is given in the `system` package and students should be able to do ***all*** assignments working inside this package.
+For this reason, it is necessary to provide some isolation between the `cpu` and `system` packages, and is achieved by `cpu` providing the `System` interface as shown in listing \@ref(lst:04-system-interface).
+
+(ref:cap-04-system-interface) The `System` interface in Gotos consists of handlers and functions that should return pointers to shared resources.
+
+```{.go #lst:04-system-interface caption="(ref:cap-04-system-interface)"}
+type System interface {
+    // handlers
+    HandleTrap(*Core)
+    HandleBoot(*Core)
+    // shared resources
+    Memory() *Memory
+    ReservationSets() *ReservationSets
+    InterruptMatrix() *InterruptMatrix
+    WgAwake() *sync.WaitGroup
+    WgRunning() *sync.WaitGroup
+}
+```
+
+```{r 04-core, fig.cap='Simple overview of the Core in Gotos, showing the main components.', }
+knitr::include_graphics(normalizePath('fig/core-overview.pdf'))
+```
+
+See section \@ref(sec:example-system) for an example of how the interface can be implemented and used.
+When creating a new `Core` using `cpu.NewCore()`, we should pass a pointer to a struct that implements the `System` interface.
+In this way, `System` acts as a bridge between the `cpu` package and a system we might implement; it serves as a logical cutoff.
+When a core needs to perform a trap, it should call `HandleTrap()`, passing a pointer to itself as shown in \@ref(lst:03-trap).
+The `HandleTrap()` function should, in return, use information from the core to properly handle the event.
+This enables a core to access system functionality as a sort of co-processor instead of directly executing the individual RISC-V instructions as it would in a real system.
+
+### Accessing CPU resources
+
+As system code is expected to exist in a different package, Gotos exposes multiple functions to access internal resources of a `Core`.
+These functions are written in a way to minimise incorrect usage and usually take the form of getters and setters with named resources.
+
+#### Registers
+
+Take, for example, the function `Core.GetIRegister()` which takes an argument of type `Reg` and returns a `uint32`.
+This function accepts type `Reg` whose values are enumerated in the file `cpu/register.go`.
+As the `Core` has thirty-two integer registers, we minimise incorrect usage by allowing only correct values to be used for accessing these internal registers.
+Additionally, systems are encouraged to use the semantic names defined in the RISC-V specification (See table 25.1, column "ABI Name" in the specification [@rv5vol1]), though the "raw" names are also exposed as `Reg_XNN` where `NN` is a number 0 -- 31.
+
+The semantic names follow a similar pattern, but also convey usage: e.g. `Reg_A0` -- an alias for `Reg_X10` -- is the first *argument register*, used for passing normal, non-floating-point function arguments.
+See file `cpu/register.go` for all names.
+
+This pattern of registers being accessible to external consumers, only through named constants, applies to all internal registers: base registers through `GetIRegister`, floating-point registers through `GetFRegister`, and control status registers through `GetCSR`.
+
+#### Virtual memory
+
+#### Physical memory
+
+Although physical memory is already accessible to the system (because it implements the `System` interface from which the memory comes), it is semantically "unaesthetic" to access system resources in a direct manner such as `s.memory.WriteRaw(...)`.
+
+The code that runs through a trap-handler (which applies to most of the code students will be writing), runs *as if* it is executing on the core.
+It logically follows that we should access system resources from the perspective of the core.
+We provide two functions to access physical memory from the perspective of the core: `AtomicStoreWordPhysicalUncached` and `AtomicLoadWordPhysicalUncached`.
+These functions are intended to be rarely used for critical cases where atomicity is required, such as when reading or updating the page table.

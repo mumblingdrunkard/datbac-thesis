@@ -1,0 +1,151 @@
+# Discussion
+
+This chapter is reserved for more subjective discussion of thoughts and ideas.
+
+## Justifications
+
+### Why Go?
+
+Go is a high-level garbage-collected language.
+It is statically typed and compiles to native binaries.
+Go compiles and runs quickly using `go run` meaning code is quickly iterated upon.
+
+Go also has excellent tooling included and a toolchain that is easy to get set up and running.
+It has a very extensive "batteries included" standard library and generally embraces modern concepts of safe and efficient systems development.
+
+Besides the aforementioned points, Go also has a very simple syntax that is reminiscent of C, but with garbage-collection and a couple other primitives such as `map` and the prevalent slice-type.
+This means that it is possible to learn the language quickly and is less likely to overwhelm students with concepts such as manual memory management, generic functions, or special high-level abstractions that obscure the inner workings of code.
+
+All of this lets students use Gotos to learn about very fundamental parts of operating systems without worrying about dangling pointers, null-references, memory-leaks, etc.
+
+### Why Emulation?
+
+Xv6, a popular teaching OS, is compiled and runs directly and fully on hardware, even though that hardware may be, and often is emulated through software like QEMU for practical reasons.
+As mentioned in section \@ref(sec:02-xv6), Xv6 enjoys much popularity, which begs the question: why not just use Xv6?
+
+Again, the answer comes down to ease of use and ease of adoption.
+Xv6 has the advantage of being popular, meaning it has a lot of literature written for it and labs provided.
+However, it is still restricted to using C and assembly, and is very concerned not only with resource management in user-space, but also with resource management in kernel-space, something that can be off-putting to inexperienced students.
+
+Why not rewrite Xv6 in Go then?
+This is perhaps an option and would likely ease some of the challenges faced.
+Biscuit OS has shown that it is possible to write an operating system using nothing but Go and a little assembly. @cutler2019
+Still, the runtime would be severely limited, and we would not be able to simply `go run` our system.
+
+This is why the partial emulation of Gotos was chosen.
+User-space programs can be compiled and run on the emulated processor, while kernel-space operations can be written in a high-level language with access to a wide library of features and niceties.
+
+### Why RISC-V?
+
+Finally, RISC-V was chosen as a modern RISC architecture that is easy to teach and simple to emulate.
+It is still a relatively "clean" architecture in that it has not accumulated many extensions which produce clutter as is the case for more commercialised architectures such as ARM or x86.
+Additionally, RISC-V, being a successor of MIPS, seems fitting for the Gotos emulator, being much inspired by Nachos which utilised MIPS.
+
+RISC-V also has very strong support from several compilers such as clang or gcc.
+Even though test-applications for Gotos are written in C, it is conceivable that they could be written in other languages such as C++, Rust, or even a constrained version of Go. @rv5go
+
+RISC-V is an architecture that does not look to be going away soon and should enjoy support from popular languages for years or even decades to come.
+
+## Results
+
+We would like to briefly discuss the results of our work.
+
+### The code
+
+Most of the code exists in the `cpu` package and consists of around 4500 source lines of code (SLoC) including comments and blank lines.
+Some of the provided skeleton-code exists in the `system` package and makes up a few hundred lines of code.
+
+### Performance
+
+In the best of circumstances, -- with address translation disabled, IPIs disabled, no preemption,  -- cores are able to execute around 65 million instructions per second (mips) on an Intel Core i7 1065G7.
+This number decreases when additional features are added.
+Performance penalties are approximately as follows:
+
+- 20% for address translation, and
+- 15% for enabling IPIs (checked every cycle) and approximately 5% for each added core.
+
+These are the largest performance penalties because of how they affect the fetch-execute cycle.
+Address translation requires lookup in a map, and IPIs require atomic loads to occur on every cycle.
+After enabling both, we are still left with adequate performance to do useful work and run realistic example programs.
+
+However, if performance is not to our liking, we can mitigate most of the performance penalty of IPIs by only checking them every *K* cycles.
+This ensures that IPIs can still be received within microseconds and reduces the frequent atomic loads to a frequently accessed local counter and infrequent loads and stores.
+
+The overhead of address translation is difficult to negate, but we accept it as necessary.
+
+With all features enabled and mitigation applied, the emulator is still able to execute at close to 50 million instructions per second, if not more.
+We find this to be adequate for any purpose that Gotos can be useful for and leaves enough margin to add other performance-degrading features without worry.
+
+## Future work
+
+There are multiple improvements to be done for this project and many features to be added before widespread adoption can occur, but we believe that Gotos has a real potential to be an extensible and user-friendly platform for teaching all things OS.
+
+### Interrupt controller
+
+The implementation of interrupts -- though adequate for the current assignments -- could use some work.
+Current implementation uses what we would call "special purpose" interfaces.
+An interrupt controller would serve as a more general interface and could make use of the intended control status registers to signal interrupts in a way that is closer to the
+
+### Compliant floating-point numbers
+
+Although a very minor detail, it would be nice to have a fully compliant implementation from the application/user-mode perspective.
+The current implementation is built for speed and simplicity and does not comply with the RISC-V specification for how floating-point numbers should behave.
+
+Go has `math/big` which contains most of the functionality required such as rounding modes, adjustable accuracy, etc.
+It should be possible to create a fully compliant solution, although it would likely be much slower than current implementation.
+
+### MMIO
+
+Current implementation has no memory mapped IO and the IO architecture is simplistic.
+We believe it is possible to wrap `Memory` in an interface that allows a system to define a full system of memory-mapped devices such as UART, a frame-buffer, and much-much more.
+
+Because these devices would share the address space with normal memory, they could be mapped directly to user-space processes which both improves performance, and extends the capabilities of the system.
+
+Before this can happen though, physical memory protection (PMP) and physical memory attributes (PMA) (see section \@ref(sec:mem-virt)) should be supported and the memory controller should be improved to take these features into account when deciding whether or not to cache accesses.
+
+### Extensive testing and benchmarking
+
+In somewhat of the same sentiment as the previous point: all parts of Gotos should be double and triple-checked against the relevant specifications and adequate tests should be written to enable rapid development without fear of introducing subtle bugs.
+
+Most of the focus throughout this project has been to create a working prototype and Gotos is far from finished.
+Tests can be written for all instructions as RISC-V is unlikely to change in the near future.
+However, it is more difficult to test the rest of Gotos as different components are subject to rapid change and iteration.
+
+### Nicer visualisation and debugging
+
+A visualiser would be a nice quality-of-life improvement, especially when stepping through programs.
+The best alternative that is currently available is `StepAndDump` which is best used with only one core, and integrates poorly with the terminal, easily flooding it with printouts.
+
+The debugging experience can also be much improved with functions like `StepBack` and the likes, allowing us to step backwards and replay certain events.
+Building this as a naive collection of old copies of the system is possible, though very wasteful.
+
+All this should be wrapped in a nice command-line interface or perhaps even a graphical interface.
+
+This seems suitable as a 
+
+### Additional lab-assignments
+
+The assignments we have created have focused mainly on replacing the current assignments, but Gotos is practically infinitely expandable, though more work should be put in to ensure that this expansion can be done cleanly.
+
+#### File systems
+
+An assignment about file systems would be interesting, though not relevant to the DAT320 course as it stands at the time of writing.
+The course only covers the broad strokes of virtualisation, but a second course could cover more advanced high-level topics such as file systems, devices, general IO, etc., once the initial hurdle of processor and memory virtualisation is cleared.
+
+## Separate courses
+
+We would like to briefly argue for the case of splitting the DAT320 course in two or more parts: a systems programming course, and an OS elective.
+Our experience with the course is that it becomes too broad and has little relevance to other courses taken throughout the programme.
+
+This is not to say that caches and virtualisation are irrelevant, but that they are perhaps better taught in relation to other systems than operating systems.
+
+It becomes burdensome for third semester students who have only done one or two semesters of programming and have not been through a course teaching basic algorithms and data structures.
+Suddenly, one is expected to learn statically typed languages, stacks (call stack), trees (multi-level page-tables), low-level memory layout, instruction sets, and more.
+All this in addition to systems level programming which encompasses topics such as containers, benchmarking, testing, etc, which are largely skimmed because of the breadth of the course.
+
+It is clear to us that this composition leaves too little room to explore all concepts with satisfactory depth; especially systems programming.
+
+We believe that an OS course which teaches operating systems, and makes use of the Gotos framework for assignments, is better taught as a fourth or fifth semester elective when students have learned about basic algorithms and data structures, have some experience using statically typed languages, know how testing and benchmarking works, and have generally more tools to deal with the low-level complexities encountered in operating system development.
+
+A systems programming course could explore interesting, and highly relevant concepts such as containers, continuous integration, benchmarking, system interfaces, concurrent execution, and general system architecture, without having to learn operating systems from the bottom up.
+Gotos should not be included in such a course as it is intended to teach OS concepts by implementing OS components, and not to teach systems programming.

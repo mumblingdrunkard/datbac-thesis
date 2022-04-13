@@ -1,0 +1,291 @@
+## Processor architecture - RISC-V in Gotos
+
+The processor emulator included in Gotos serves as a basis for the framework to build on.
+It is a trivial implementation of a RISC-V emulator, supporting only a 32 bit architecture (thus omitting a number of instructions, but keeping a decent target).
+
+The main goal is to provide a feature-full processor that closely mimics the behaviour of real processors in single- or multicore systems, and with acceptable performance.
+For these reasons, we omit multiple details of the RISC-V specification, opting for only those features that are relevant and required for OS development.
+
+In this section we provide a description of the relevant parts of the RISC-V specification and where Gotos adheres or diverges from this, along with some justifications for the divergence.
+We also describe briefly the different components that have been used to achieve the goal of efficient multicore execution.
+
+### The RISC-V instruction set architecture (ISA)
+
+Gotos uses a user-mode RISC-V emulator for processes running on the system.
+This is similiar to Nachos' MIPS emulator. @nachos-report
+This section contains a short description of the RISC-V instruction set architecture.
+
+The RISC-V specification defines a processor with 31 general purpose registers and one special register that is hard-wired to all 0s.
+It specifies a base instruction set -- RV32I -- of 40 instructions that operate on values in these registers.
+This is the minimal instruction set that a RISC-V processor can reasonably support.
+
+It also specifies several extensions that add capabilities such as floating-point arithmetic, or atomic operations.
+
+#### The G extension
+
+The G extension is a collective extension used to refer to the IMAFDZicsr Zifencei extensions all together.
+Intended as a reasonable target for applications running on modern systems:
+
+- I, the base RISC-V instruction set of 40 instructions.
+- M, extension for multiplication and division.
+- A, extension for atomic operations.
+- F, extension for single precision floating-point arithmetic.
+- D, extension for double precision floating-point arithmetic.
+- Zicsr, extension for user-mode control-status registers. Rarely used and probably should not be for user-mode programs as we are unsure about the correctness of its implementation.
+- Zifencei, extension for instruction fence. Contains only one instruction that forces a core to flush its instruction cache.
+
+The Gotos RISC-V emulator implements all of these extensions, allowing most system-independent code to compile and execute without any problems.
+The F, and D extensions are non-compliant, but functional.
+Applications should not expect fully compliant floats.
+
+We expect students will not be writing many of their own applications as most applications used for testing the operating system should already be provided by the labs.
+Still, the G extension provides a solid base to build on and it should be possible to use the emulator to teach basic assembly if desired.
+
+However, test-applications should preferably be written only with the I, M, A, and Zifencei extensions which are enabled by default (and cannot be disabled).
+The F, D, and Zicsr extensions require more work and quality-assurance before they can be reliably used in an application and are disabled by default.
+If not enabled, instructions from these three extensions will raise a `TrapIllegalInstruction`.
+
+See appendix \@ref(ap:user-space) for how to write and compile applications for the emulated processor.
+
+### The RISC-V privileged architecture
+
+The RISC-V specification also defines a privileged architecture.
+This specification contains information about what a RISC-V implementation must provide for certain software like operating systems to function.
+Gotos heavily diverges from the specification at this level as the processor emulator is not intended to run full systems such as Xv6 or Linux.
+Other projects already accomplish this task and do it with much higher efficiency and correctness.
+
+The privileged specification still serves as inspiration for several mechanisms in Gotos.
+One example of this is all of the privileged instructions as none of them are available to programs executing on a core.
+Their effects are necessary for an operating system, so they have to be achieved through other interfaces.
+
+`sfence.vma` is a critical instruction that ensures a core can see updates made to the virtual memory configuration.
+This instruction is not provided in the implementation and so its effect has to be achieved by other means.
+Instead, Gotos `Core` provides `SFENCE_VMA()` which should be called on the core when performing an address space switch or something that otherwise requires a local TLB flush.
+Note that this instruction is ***not*** available to user-space programs and there is no path of execution that will ever lead to it being executed by a user-space program.
+
+
+### Instruction fetch and execute
+
+The emulator included in Gotos executes instructions in order and one at a time.
+After checking interrupts, it both fetches and executes in the same cycle.
+Instructions are guaranteed to complete in the order they are fetched.
+
+All this to say, there is no pipelining, out-of-order execution, or other special hardware optimisations implemented; these do not make much sense for an emulator.
+These features, though interesting and useful in real hardware, are only likely to slow down the emulator and are not relevant to the goals of this project.
+
+Instruction fetch is no different from other reads from memory and goes through the same pipeline of translation and cache lookup.
+
+
+### Floating-point numbers
+
+The emulator in Gotos mostly follows the RISC-V specification and should give correct results for any user-space application that might be interesting in an OS course.
+RISC-V provides IEEE-compliant floating-point arithmetic through the F and D extensions.
+The behaviour of floats in RISC-V can be modified by writing configuration values to specific registers.
+
+Providing a compliant implementation turns out to be a challenge in Go.
+Go has `big.Float` from `math/big` which allows setting special flags and parameters to modify floating-point behaviour such as rounding modes or accuracy.
+However, implementing fully compliant floating-point arithmetic is messy and requires many lines of code for an operation that should be simple.
+Instead, Gotos opts to use the standard `float32` and `float64` types provided by Go.
+As far as we know, float types in Go use the IEEE floating-point format meaning the only thing lost is the ability to configure certain behaviours.
+
+We imagine that any real use of floating-point numbers would be in performance critical applications such as in a real-time game.
+We therefore accept the compromise of a non-compliant implementation for the sake of improved performance.
+
+
+### Atomic operations
+
+RISC-V uses load-reserved/store-conditional primitives for atomic operations.
+It achieves this accross multiple cores by using *reservation sets*.
+A core can perform a `lr.w` instruction which will atomically load a word and register a reservation that subsumes the loaded bytes.
+Reservations in Gotos tracked on a cache-line basis and use only physical addresses.
+
+This reservation may be invalidated for a number of reasons such as:
+
+- a store-conditional to the reserved region occured on a different core,
+- another reservation was made by the same core, or
+- a store is made to the reserved region by an external device.
+
+At a later point the core may perform an `sc.w` instruction, which will attempt to store a word.
+This store will only be successful if the reservation for that word is still valid.
+
+Cores can not hold more than one valid reservation at a time, and reservations should be invalidated when a context switch occurs.
+To prevent live-lock, RISC-V has architectural guarantees that a LR/SC-pair will eventually be successful as long as the SC instruction comes within 16 instructions after the LR instruction.
+
+Load-reserved/store-conditional has benefits and disadvantages compared to something like *compare-and-swap* and can make debugging concurrent applications especially difficult as stepping through programs may inadvertently invalidate reservations so that none of the threads can make progress.
+
+### Memory protection, attributes, and virtualisation {#sec:mem-virt}
+
+RISC-V provides several ways to set rules for memory access:
+
+*Physical Memory Protection* (PMP) registers are special control status registers that define rules for how physical may be accessed. This is an optional feature.
+
+*Physical Memory Attributes* (PMA) registers are special control status registers that define attributes of regions of memory such as:
+
+- which atomic operations are permitted,
+- reservation guarantees,
+- access-alignment,
+- memory-ordering,
+- coherence and cacheability, and
+- idempotency.
+
+These regions are usually defined at design-time and are largely non-configurable, thus we omit their implementation.
+It may be good to have configurable PMA registers so that I/O modules may be created and configured for the system, but they are unnecessary for this version of Gotos and would only clutter implementation.
+They may be added in a later implementation if needed.
+
+*Supervisor Address Translation and Protection* (**satp**) is a special control status register.
+
+> "This register holds the **physical page number (PPN)** of the root page table, i.e., its supervisor physical address divided by 4KiB;
+> an **address space identifier (ASID)**, which facilitates address-translation fences on a per-address-space basis;
+> and the **MODE field**, which selects the current address-translation scheme."
+>
+> `r tufte::quote_footer('--- The RISC-V Instruction Set Manual - Volume II: Privileged Architecture [@rv5vol2, section 4.1.11], emphasis: us.')`
+
+(ref:cap-03-satp) Layout of the **satp** register.
+
+```{r 03-satp, fig.cap='(ref:cap-03-satp)', }
+knitr::include_graphics(normalizePath('fig/satp.pdf'))
+```
+
+Of these, **satp** is the only register that has any effect in Gotos and is active as long as the processor is in user-mode and the MODE field is set. [@rv5vol2, page 75]
+Gotos does not provide physical memory protection and does not allow setting physical memory attributes.
+While certainly useful, it adds clutter to an already complex problem with little benefit for the students that will eventually use this.
+
+The PPN field serves as a pointer to the page-table that is currently in use.
+Left-shifting the value by 12 bits will give the address of the first page in a multi-level page-table.
+
+The ASID field is useful to prevent excessive flushing of TLBs as entries will be tagged with the current ASID.
+Later an `sfence.vma` instruction can specify which ASID it should apply to or even which mapping.
+
+#### The Sv32 page-table format
+
+The Sv32 format is the only format supported on 32-bit RISC-V processors. [@rv5vol2, section 4.3]
+It is a two-level page-table format that divides virtual addresses into three parts: **vpn1** (10b), **vpn0** (10b), and **page offset** (12b) (see figure \@ref(fig:03-sv32addr)).
+The *virtual page number* (VPN) is split in two (**vpn1** and **vpn0**) as each part is used to index into a different level in the page table.
+
+```{r 03-sv32addr, fig.cap='Segments of a virtual address in the Sv32 format.', }
+knitr::include_graphics(normalizePath('fig/sv32addr.pdf'))
+```
+
+A "level" in this page-table format always takes up a full page and is aligned on a page/frame boundary.
+Page-table entries (PTEs) are 32 bits and pages/frames are 4096 bits, meaning a level contains 1024 entries, which fits with the 10 bits per level of the **vpnX**.
+
+```{r 03-sv32pte, fig.cap='A RISC-V Sv32 PTE. The first 22 bits are the physical frame number; the last 10 bits are for different flags.', }
+knitr::include_graphics(normalizePath('fig/pte.pdf'))
+```
+
+A PTE works so that if the *R*, *X*, and *W* bits are all 0 and the *V* bit is 1, this entry is a pointer to the next level of the page-table.
+Translation starts by using the **PPN** field of the **satp** register as a pointer to the first level of the page-table.
+A detailed explanation of RISC-V address translation is found in the specification. [@rv5vol2, section 4.3.2]
+A brief summary is provided here:
+
+(1) Let $p$ be the value of the **PPN** field in the **satp** register, and let $v_1$ be the value of **vpn1**.
+    The current PTE is located at $4096p + 4v_1$.
+
+(1) If the *V* bit of this PTE is set and $R + V + W \neq 0$ (at least one of the permission bits are set), this is a super-page; let $f$ be the value of the **PFN** field, $v_0$ be the value of **vpn0**, and $o$ be the **offset**, then the final address is given as $4096f + 4096v_0 + o$.
+    Otherwise, move on.
+    (Note that super-pages have to be aligned on a super-page boundary of 4MiB).
+
+(1) Let $p$ be the value of $f$.
+    The current PTE is located at $4096p + 4v_0$.
+
+(1) Let $f$ be the value of the **PFN** field of the PTE, then the final address is given as $4096f + o$ (assuming the PTE is valid and sufficient permissions are present).
+
+The steps outlined have many missing pieces and make assumptions that we don't encounter invalid translations.
+In these cases, appropriate page-faults are raised depending on the type of access that triggered the page-fault.
+
+#### The Ex10 page-table format
+
+A simpler way to explain this format is by using a smaller, but similar two-level page-table format that we call Ex10 (example 10-bit).
+In this format we split 10-bit virtual addresses into three pieces: **vpn1** (3b), **vpn0** (3b), and an **offset** (4b).
+Thus, pages/frames are 16 bytes each.
+We use a PTE-size of 2 bytes, meaning each page/frame can hold 8 entries, corresponding to the 3 bits of each part of the **vpnX**.
+
+An Ex10 PTE consists of an 8-bit **PFN** and 8 flag bits.
+
+By using a relatively small format, we can do the translation visually as shown in \@ref(fig:03-ex10).
+
+```{r 03-ex10, fig.cap='An example using the Ex10 page-table format to translate a 10-bit virtual address.', out.width='5in'}
+knitr::include_graphics(normalizePath('fig/ex10.pdf'))
+```
+
+Here we have found the value of `v1` by following the address step by step.
+The first level of the page-table is stored in the frame that starts at address `20`.
+We calculate the position of the first PTE as `24` (row 2, column 4).
+We take the **PFN** value of `04` to the next step.
+We repeat this one more time and we find that `v1` is located at `33` (row 3, column 3) and has a value of `AB`.
+
+Notice that while virtual addresses are only 10 bits, the resulting physical address can be as large as 12 bits (8-bit frame number and 4-bit offset).
+This is the case for Sv32 as well which translates 32-bit virtual addresses to 34-bit physical addresses, meaning a full 16GiB can be in use, even though processes can only map 4GiB.
+
+### The program counter/instruction pointer
+
+The program counter usually advances by 4 after each cycle, pointing to the next instruction.
+The exceptions are for jumps caused by branches or by unconditional jumps.
+
+Traps behave like jumps with an offset of 0, meaning that when/if the trap-handler eventually returns, the processor will attempt to execute the instruction it trapped on, unless the operating system interferes and changes the value.
+This is important to note for things like system calls that eventually return control to the process as it should return at the instruction *after* the `ecall` that triggered the trap.
+
+
+### Traps
+
+Much like in a real system, a trap is the only mechanism to switch from user-mode applications into OS code.
+RISC-V specifies multiple reasons that a processor might trap and how traps should be implemented on a processor.
+Gotos implements most of these trap reasons.
+Some are ignored as they only occur in special modes or simply never occur because of the way Gotos does certain things.
+
+Traps may be caused for several reasons:
+
+- an illegal instruction may have been fetched,
+- page fault because of insufficient permissions,
+- misaligned access,
+- timer interrupt,
+- external interrupt, or
+- an `ecall` or `ebreak` instruction was executed.
+
+A few other trap reasons exist for certain modes or actions that are not available in Gotos.
+The specification informs what should happen when a trap occurs:
+
+1. The privilege level is elevated to machine mode (unless delegated, but we do not allow this in Gotos).
+
+1. Virtualisation mode is set to 0 and information about the trap reason and the originating privilege mode is written to specific registers.
+   In Gotos, the originating privilege mode will always be user mode so these registers are ignored.
+   The trap cause is stored to **mcause**, the program counter is written to **mepc** (machine exception program counter), and the faulting value (if any) is written to **mtval**.
+
+1. After trap setup is complete, the program counter is set to the value contained in **mtvec**, potentially with some offset for vectored exceptions.
+   On this point, Gotos is very different.
+   Gotos ignores the **mtvec** register, opting instead for a `HandleTrap(...)` function.
+   This function is the main entry point for the operating system kernel to execute any code.
+
+1. When trap handling is complete a special instruction `mret` should be executed to set the program counter to the value stored in **mepc** and restore the privilege mode that was written in the second step.
+   This means that unless anything else is written to **mepc**, execution will continue at the address where the processor originally trapped.
+   This is the intended behaviour as many traps require OS intervention before retrying the instruction.
+   Since the privilege mode is always user-mode, the only thing `mret` does is set the program counter to the value stored in **mepc**.
+
+Gotos makes this last step implicit as it should be the only mechanism by which the OS changes the program counter.
+The `trap` function used in the emulator is shown in listing \@ref(lst:03-trap).
+
+The first two lines are part of the trap setup; the third line ensures that the processor will not automatically update the program counter after finishing; the fourth line calls the actual `HandleTrap(c)`, more about this in the next chapter; and the last line restores the program counter.
+
+(ref:cap-03-trap) The `trap` function used in Gotos.
+
+```{.go #lst:03-trap caption="(ref:cap-03-trap)"}
+func (c *Core) trap(reason uint32) {
+    c.csr[Csr_MCAUSE] = reason
+    c.csr[Csr_MEPC] = c.pc
+    c.jumped = true
+    c.system.HandleTrap(c)
+    c.pc = c.csr[Csr_MEPC]
+}
+```
+
+Listing \@ref(lst:03-yield) shows a practical example of a trap-handler which returns control to the program that caused it.
+It accomplishes this by fetching the original address, then writing the address of the next instruction to ensure that execution continues as normal.
+
+(ref:cap-03-breakpoint) The simplest possible handler for a trap caused by a process executing `ebreak`.
+
+```{.go #lst:03-yield caption="(ref:cap-03-breakpoint)"}
+func (s *System) handleBreakpoint(c *cpu.Core) {
+    trapAddress := c.GetCSR(cpu.Csr_MEPC)
+    c.SetCSRc(cpu.Csr_MEPC, trapAddress+4)
+}
+```
