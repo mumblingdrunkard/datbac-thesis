@@ -2,16 +2,17 @@
 
 The current assignments for the class *"Operating Systems and Systems Programming DAT320"* @dat320-web at \acrshort{uis} are disconnected and lack a unifying framework.
 OS components are simulated, and students write some code to interface with these.
-However, the lack of a framework means that interactions between these components are difficult or impossible to explore, ignoring a vital part of OS development.
+However, the lack of a framework means that interactions between these components are difficult or impossible to explore, skipping a vital part of OS development.
 
 This project delivers a framework that provides the necessary complexity that operating systems naturally deal with, but without excluding the intended audience: third-semester students at UiS.
-A RISC-V emulator is included to provide the required complexity of managing actual processes with resources.
+A multicore RISC-V emulator is included to provide the required complexity of managing actual processes with resources.
 However, the emulator only executes in user/application mode, delegating traps to the surrounding system written in a high-level, garbage-collected programming language, executing on real hardware.
 
 Implementing OS components in a high-level language simplifies kernel resource management, allowing students to focus on more fundamental concepts of processor virtualisation, limited direct execution, memory virtualisation, and protection.
-The emulator ensures that students can fully observe the effect of the components they build by seeing how changes affect performance and other metrics.
+The emulator enables students to explore how their implementations affect, and are affected by real workloads.
 
-The new assignments have largely the same focus as the old ones but emphasise guidance instead of exploration.
-By guiding students through assignments, we hope to cover more material than can be expected when students have to explore.
+Using a user-mode emulator aside a high-level language to teach operating systems is not a novel concept.
+Nachos implemented this exact idea and served as proof that this is a viable approach. @nachos-report
+However, since its inception in 1992, advancements have been made and operating systems now have to deal with multiple cores in a single system.
 
-This project has resulted in several components such as a RISC-V user-mode emulator, a loose -- but functional -- system interface, a series of assignments, and a book that guides the assignments.
+We believe that we are presenting proof that a multicore emulated architecture is also possible; one that can provide the added complexity of writing a multicore operating system while staying simple enough that undergraduate students can realistically understand the fundamentals within a semester.

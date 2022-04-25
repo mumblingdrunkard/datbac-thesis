@@ -1,0 +1,59 @@
+## Justifications
+
+We will make some justifications for why we have chosen the given technologies, methods, and features.
+
+### Why Go?
+
+Go is a high-level garbage-collected language.
+It is statically typed and compiles to native binaries.
+Go compiles and runs quickly using `go run` meaning code is quickly iterated upon.
+
+Go also has excellent tooling included and a toolchain that is easy to get set up and running.
+It has a very extensive "batteries included" standard library and generally embraces modern concepts of safe and efficient systems development.
+
+Besides the aforementioned points, Go also has a very simple syntax that is reminiscent of C, but with garbage-collection and a couple other primitives such as `map` and the prevalent slice-type.
+This means that it is possible to learn the language quickly and is less likely to overwhelm students with concepts such as manual memory management, generic functions, or special high-level abstractions that obscure the inner workings of code.
+
+All of this lets students use Gotos to learn about very fundamental parts of operating systems without worrying about dangling pointers, null-references, memory-leaks, etc.
+
+In the end, the choice was made for us by the requirements of the original project proposal, but it is not a decision we necessarily disagree with.
+
+### Why emulation?
+
+Xv6, a popular teaching OS, is compiled and runs directly and fully on hardware, even though that hardware may be, and often is emulated through software like QEMU for practical reasons.
+As mentioned in section \@ref(sec:02-xv6), Xv6 enjoys much popularity, which begs the question: why not just use Xv6?
+
+Again, the answer comes down to ease of use and ease of adoption.
+Xv6 has the advantage of being popular, meaning it has a lot of literature written for it and labs provided.
+However, it is still restricted to using C and assembly, and is very concerned not only with resource management in user-space, but also with resource management in kernel-space, something that can be off-putting to inexperienced students.
+
+Why not rewrite Xv6 in Go then?
+This is perhaps an option and would likely ease some of the challenges faced.
+Biscuit OS has shown that it is possible to write an operating system using nothing but Go and a little assembly. @cutler2019
+Still, the runtime would be severely limited, and we would not be able to simply `go run` our system.
+
+This is why the partial emulation of Gotos was chosen.
+User-space programs can be compiled and run on the emulated processor, while kernel-space operations can be written in a high-level language with access to a wide library of features and niceties.
+
+### Why multicore?
+
+The world is increasingly moving to parallel concurrent execution.
+We believe that if Gotos is to provide all the challenges one can encounter in developing a real operating system, we must provide a realistic environment.
+
+Even though none of the proposed assignments touch on multicore operation, we believe it is important to enable expansion into multicore operating system development if this project is to be a realistic alternative for the full range from introductory to advanced courses.
+
+Certain interesting challenges such as cache synchronisation arise exclusively when multiple cores are involved.
+In single-core mode, the memory-caches never needs to be invalidated (though it still enhances performance), and the TLB only needs to be invalidated when ASIDs are recycled.
+
+The multicore interface of Gotos is still quite unstable and unwieldy, but we believe that with further development, Gotos can be a viable platform to teach multicore operating systems.
+
+### Why RISC-V?
+
+Finally, RISC-V was chosen as a modern RISC architecture that is easy to teach and simple to emulate.
+It is still a relatively "clean" architecture in that it has not accumulated many extensions which produce clutter as is the case for more commercialised architectures such as ARM or x86. (citation needed)
+Additionally, RISC-V, being a successor of MIPS, seems fitting for the Gotos emulator, being much inspired by Nachos which utilised MIPS.
+
+RISC-V also has very strong support from several compilers such as clang or gcc.
+Even though test-applications for Gotos are written in C, it is conceivable that they could be written in other languages such as C++, Rust, or even a constrained version of Go. @rv5go
+
+RISC-V is an architecture that does not look to be going away soon and should enjoy support from popular languages for years or even decades to come.

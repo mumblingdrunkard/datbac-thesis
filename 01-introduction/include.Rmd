@@ -24,136 +24,16 @@ How early can this subject be introduced?
 
 In this thesis we present Gotos, a framework for teaching operating system concepts to undergraduate students using Go, a high-level and garbage-collected language.
 We present a multicore RISC-V emulator that executes user-space code, and the abstractions and interfaces that allow students to write their own OS components in Go.
-We also outline challenges that arise due to emulation or running with multiple cores, and propose solutions to these challenges.
+We also outline challenges that arise due to emulation or running with multiple cores, and propose some solutions to these challenges.
 
-<!--
+Partially emulated instructional operating systems are not a new concept, but as far as is known to us, it is still a somewhat unexplored idea to expand the concept with multicore challenges and capabilities.
 
-## What should I cover in the thesis? (TEMPORARY)
-
-*Questions:*
-
-- Why Go?
-- Why emulation/simulation?
-- Why a virtual CPU?
-- Why RISC-V?
-- Why 32 bit?
-- Why caching?
-- Why mmio?
-- Why multicore?
-- Why C?
-
-### Background
-
-- Go
-- Nielsen et. al.
-- Meling
-- Current labs
-
-### Related Work
-
-- nachos
-    - TODO
-- pintos
-    - TODO
-- xv6
-    - "A modern reimplementation of Sixth Edition Unix in C for x86 and RISC-V systems."
-      It has been used by multiple courses accross several universities to teach operating systems, e.g. at MIT where it was developed. @xv6
-- minix
-    - Originally a teaching operating system, but the third edition is focused on being a reliable microkernel.
-      An accompanying book has been written for each of the three major versions.
-      Often called _The MINIX Book_, it serves as the main documentation for its respective MINIX version.
-          - _Operating Systems: Design and Implementation 1/e_. @ast1
-          - _Operating Systems: Design and Implementation 2/e_. @ast2
-          - _Operating Systems: Design and Implementation 3/e_. @ast3
-      A (likely modified) version of MINIX is used in the Intel Management Engine that is embedded on all modern processors released by Intel. @ast-intel
-- biscuitos
-    - Was previously explored as an alternative for teaching operating systems in Go.
-      It was found to be infeasible. @nielsen2019
-
-### Discussion
-
-*Advantages of the chosen approach*
-
-- Go is higher level than C and generally easier to get started with
-- Possible to run real code on top of the OS
-- Can directly interact with _a_ processor and experiment with it
-- Transparently view how programs interact with the OS
-- Can modify the "hardware" to fit the different labs
-
-*Disadvantages of the chosen approach*
-
-- Not a "real" system
-- User-mode applications will run at a fraction of the speed
-- Data structures used by the kernel and data structures used by user-mode applications will be stored in different memory.
-    - This is of course different from a "real" system where memory is shared between user-mode and kernel-mode processes
-    - This can also be an advantage as it leads to less complexity for students learning about the subject
-
-*About Go*
-
-*About C*
-
-*About RISC-V*
-
-*What should the labs cover and why?*
-
-1. *The process and the processor*
-    - Short introduction to computer architecture
-    - Assembly instructions
-    - CPU traps
-    - Memory
-    - Memory mapping
-    - Running a program on the CPU
-    - A simple syscall on the CPU
-
-1. *Scheduling*
-    - Batch scheduling
-    - Scheduling metrics
-    - SJF scheduling (a form of batch scheduling)
-    - Preemptive schedulers (SRJF, RR, Stride)
-    - Modern schedulers (MLFQ, O(1), Brainfuck)
-    - Scheduling interaction with caches.
-1. *Memory virtualisation*
-    - Paging
-    - Interaction with caches (cache and TLB, invalidation, flushing, etc. etc..)
-1. *The process, revisited*
-    - Reclaiming resources when a process ends
-1. *C runtime?*
-    - syscalls
-        - fork/exec
-        - read/write
-        - brk/sbrk
-        - open/close/pipe
-        - Look at Xv6 for inspiration
-    - allocators
-        - malloc/free
-1. *Concurrency*
-    - Concurrency in Go
-    - Demo: RISC-V mutex in C
-    - Demo: RISC-V atomic operations
-1. *(ADVANCED) Multicore scheduling*
-    - Concurrent data structures for the kernel
-    - Sharing queues
-    - Core affinity
-    - Cache interactions
-1. *File system*
-    - File descriptors
-    - Buffers
-    - Directories
-    - Memory mapped files
-    - The file system interface
-1. *The process, revisited... again*
-    - Reclaiming more resources when the process ends
-
-*Framework implementation:*
-
-- Structure
-- Architecture
-- Composition
-- Implementation
-
-*Reference implementation of lab assignments.*
-
--->
+The original goal was to provide both a solid framework for assignments *and* the assignments themselves.
+However, the project has grown to such a proportion that this was not realistic for a four to five-month project and we regrettably had to settle for only providing a very basic framework.
+Still, we are confident that our results show that a multicore implementation is indeed possible, albeit with special caveats.
 
 ```{r child='01-background.Rmd'}
+```
+
+```{r child='02-structure.Rmd'}
 ```

@@ -392,8 +392,8 @@ $endfor$
 
 \makeglossaries
 
-\setlength{\parskip}{0pt}
-\setlength{\parindent}{6pt}
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{16pt}
 \setlength{\floatsep}{6pt}
 \setlength{\textfloatsep}{6pt}
 \setlength{\intextsep}{6pt}
@@ -407,7 +407,7 @@ $endfor$
 $if(glossaries)$
 \input{latex/glossary.tex}
 \input{latex/abbreviations.tex}
-\input{latex/symbols.tex}
+\glsaddall
 $endif$
 
 \pretitle{
@@ -428,7 +428,8 @@ $endif$
 \LARGE\\
 }
 \posttitle{
-\large
+\vspace{8mm}
+\large\\
 $if(author)$
     $if(author-heading)$
     $author-heading$
@@ -531,7 +532,6 @@ $endif$
 
 $for(include-before)$
 $include-before$
-
 $endfor$
 
 \pagenumbering{arabic}

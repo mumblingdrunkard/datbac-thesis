@@ -1,13 +1,184 @@
-# An alternative to TLB shootdowns {#ap:shootdown-alternative}
+# An alternative to TLB shootdowns in Gotos {#ap:shootdown-alternative}
 
-An issue that must be dealt with in operating systems that manage multithreaded processes in multicore systems, is TLB synchronisation in critical cases such as when a process unmaps a page.
+An issue arises in operating systems that manage multithreaded processes with virtual memory on multicore systems when virtual memory translations are cached; namely that of virtual memory translation synchronisation.
+This is often done with a so-called *TLB* shootdown, where one core interrupts another core, instructing it to invalidate some of its translation caches.
+When invalidation is complete, the first core can continue to mark the frame as free for use by other processes (provided the frame is not referenced by any other process of course).
 
-For example, one solution that side-steps TLB shootdowns is to mark the page as neither free, nor allocated, but introduce a third queue that states the frame is in the process of being freed.
-We will call this list *referenced*.
-When frames are initially put into this list, they are marked with $N$ bits set where $N$ is the number of cores.
-Entries should also be marked with some metadata so that cores may avoid flushing their full cache.
-The core that puts it on the list will atomically unset the bit that corresponds to this core.
-Cores should, semi-regularly be interrupted so that context-switching can occur.
-When this happens, the referenced-list can be iterated over and, if a frame is found with the right bit set for the current core, the core should invalidate the corresponding translation using `c.SFENCE_VMA()` and atomically unset the corresponding bit.
-After this is done, the core should check if the bits for other cores are also unset, in which case the routine can finally mark the page as free.
-This becomes a form of lazy freeing.
+However, interprocessor interrupts (IPIs) in Gotos are unstable and easily introduce subtle bugs because of the way they interact with mutexes or other blocking structures.
+It is much nicer to completely avoid IPIs completely when possible.
+
+We propose a technique that side-steps the use of IPIs:
+
+1. Track which cores a process has touched.
+1. When a page is unmapped from a process' virtual address space:
+    (1) Atomically update the page table.
+    (1) Create a shared struct to track the dereferencing process of this event.
+    (1) Create a struct for each core that the process has touched (except for the core that this unmapping takes place on) that contains necessary information for how to handle this event.
+    This struct should hold a reference to the previous struct.
+    (1) Atomically push respective structs to each of the touched cores' queues.
+1. Whenever a context switch happens on a core (or control is regained for any other reason) the core checks its queue to see if it has to flush some part of its translation cache.
+    (1) For each entry in the queue, flush the respective entries from the cache, then update the shared struct to reflect that this core no longer holds an invalid reference to the frame.
+    (1) Check the shared struct to see if all references are now properly invalidated, and if so, decrement the reference-count of the frame.
+
+We dub the process *TLB poisoning*.
+Instead of shooting it down, causing a lot of noise and mayhem, we inject a poisoned pill which guarantees that the invalid mapping is killed quietly some time in the future.
+The above list is quite abstract so we provide a more concrete picture with some pseudo-esque code in the next few sections.
+
+## punmap
+
+`punmap` is the inital step of unmapping a page from virtual memory
+
+```{.go #lst:punmap caption="Unmapping a frame in a multithreaded, multicore, virtual-memory-enabled, translation-cached system can be quite complex."}
+func punmap(c *Core, s *System, vpn uint32) { // page unmap
+    lockpt()  // assure exclusive access to *modifying* the
+              // page-table; cores can **ALWAYS** read from
+              // the page-table at any time
+
+    // retval will set the appropriate register to a value
+    // so that the calling process interprets it as the
+    // returned value of the function
+    retval(c, -1) // -1 signals error
+
+    // vpn2pte walks the page table from `root` and returns
+    // a pointer to the appropriate entry
+    // `root` will likely be a value from the satp register
+    // the function walks the table *as if* running on `c`
+    pte := vpn2pte(c, vpn, root)
+    if *pte & valid == 0 {  // this page is not mapped
+        return              // return with error code
+    }                       // otherwise, proceed
+
+    // `PoisonTracker` is a shared struct that tracks if
+    // the cores have appropriately dealt with the
+    // invalidated entry
+    tracker := &PoisonTracker {
+        rc:  1,             // reference counter
+        pfn: pte2pfn(*pte), // get pfn from pte
+    }
+
+    // update the page-table
+    atomic.StoreUint32(pte, 0) // invalidate the mapping
+
+    // `pid2acquireProcess` returns a handle to the process
+    // with the given process ID; pid returns the process ID
+    // of the process currently running on this core; locks
+    // the process for modification
+    p := pid2acquireProcess(s, pid())
+    defer releaseProcess(s, pid())
+
+    // invalidate the local cache using the vpn and asid
+    SFENCE_VMA(c, vpn, p.asid[cid()], ...)
+
+    // iterate over all the core IDs that this process
+    // touched and generate poison-pills for them
+    for id, touched := range p.touched {
+        // don't need pill for this core
+        if id == cid() || !touched { continue }
+
+        // `pill` is a poison pill which informs a core that
+        // it may be holding a translation in cache that has
+        // since been invalidated
+        pill := Pill {
+            vpn:     vpn,
+            asid:    p.asid[id],
+            tracker: tracker
+        }
+        refTracker(tracker) // increment tracker rc
+        s.pushPill(id, pill) // add pill to the correct queue
+    }
+
+    // remove the reference that we are holding, might invoke
+    // more code if all other cores handled the pills before
+    // we got to this point
+    derefTracker(tracker)
+
+    // punmap was successful
+    retval(c, 0);
+    return;
+}
+```
+
+This is very much a high-level overview of how a `punmap` function might look in implementation, but it is kept close to how it could be implemented in Gotos.
+The code makes many assumptions of code structure, but most of the meaning can be inferred from struct, field, and function names.
+Another thing to note is that many of the functions run in context of a core, while others run in context of the entire system.
+Where functions are scoped to a core, they include the core.
+Where functions are scoped to the system, they include the system.
+
+The above code also lacks much in terms of error handling and checking which would have to be added in a real implementation.
+
+A core should mark a process as **touched** *before any reads from the corresponding page-table can occur; i.e. before it returns control to a process it switched to which it has not yet touched*.
+
+## checkPills, and derefTracker
+
+Unmapping is not complete as we have yet to handle the poison pills we created in `punmap`.
+
+```{.go #lst:checkpills caption=""}
+// preempt is called when the processor is interrupted by
+// a timer intended for preemtion
+func preempt(c *Core) {
+    checkPills(c)
+    // do other stuff
+}
+
+// checkPills will empty the pill queue and handle them
+// this function is greatly simplified and a real version
+// would have to include proper care for atomicity;
+// if checkPills is called very infrequently, for example
+// on preemption, mutexes are appropriate;
+// pushPill has to exercise the same care
+func checkPills(c *Core) {
+    for len(c.pills) != 0 {
+        pill := c.pills[0]
+        c.pills = c.pills[1:]
+        handlePill(c, pill)
+    }
+}
+
+// handlePill will use information from a pill to invalidate
+// part of its translation cache
+func handlePill(c *Core, pill Pill) {
+    SFENCE_VMA(c, pill.vpn, pill.asid)
+    derefTracker(pill.tracker)
+}
+
+// derefTracker will dereference a `PoisonTracker` and, if
+// it is the last to do so, inform the system that the frame
+// should be dereferenced
+func derefTracker(tracker *PoisonTracker) {
+    // this was not the last pill, just return
+    if atomic.AddInt32(&tracker.rc, -1) != 0 { return }
+
+    // otherwise, this unmapping is complete and we can tell
+    // the system to decrement the reference counter for the
+    // frame
+    derefFrame(tracker.pfn)
+}
+```
+
+The above code/algorithm should be sufficient to handle the rest of the unmapping process.
+
+## Pitfalls and improvements
+
+The page-table entry should be invalidated before the `process.touched` list is accessed, otherwise, we risk that a new core gets the old version of the page-table and we don't properly inform the core that it has just fetched a soon-to-be invalid mapping.
+This would actually not be a problem in the displayed code as we "lock" the process so that any core that might pick it up will have to wait until `punmap` returns anyway.
+
+Still, the process does not need to be fully locked down:
+We can make do with an atomic read of the `touched` list *after* atomically updating the page table.
+In this case, the above point is valid.
+This way we also don't block other cores from picking up threads of the process while `punmap` runs its course.
+
+`punmap` looks to be a heavy operation (but less so than an IPI for each of the `touched` cores), so it should likely be avoided when implementing something like an allocator.
+Freed pages can instead be tracked internally and repurposed, instead of asking the operating system to unmap the page.
+
+The operating system itself might also track frames dedicated to the process, but not mapped by any page, reducing the cost of unmapping the page as the process will not corrupt other processes by writing to the unmapped page, thus avoiding the need for TLB invalidation on other cores.
+These might be frames that were previously mapped, but have since been unmapped.
+Saving unmapped frames for re-use is cheaper yet than poisoning all the touched cores.
+
+The core idea of all the improvements is re-use over re-allocation and is not a novel thought. @kudla2020
+
+## Conclusion
+
+Clearly, there are many ways to skin this proverbial cat, this is one that avoids interprocessor interrupts.
+An optimal solution should likely incorporate several of the aforementioned ideas.
+
+Additionally, this proposal has not been properly tested and may contain holes and edge-cases that make it infeasible for real-world implementation.

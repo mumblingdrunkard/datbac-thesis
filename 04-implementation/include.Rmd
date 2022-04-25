@@ -3,6 +3,9 @@
 This chapter describes the implementation of the multiple systems and sub-systems found in the Gotos project.
 Gotos requires Go version 1.18 or later.
 
+Most of this chapter is dedicated to describing the RISC-V emulator, which is implemented in 4-5000 lines of code.
+This somewhat large size is attributed to many comments and the 
+
 ```{r child='01-structure.Rmd'}
 ```
 

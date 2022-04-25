@@ -54,13 +54,22 @@ The data cache may be invalidated and written back by a `fence` instruction.
 Because the Sv32 format allows any entry in the page-table to be a leaf-page, it allows for two different page sizes.
 Usually, efficient systems would keep two TLBs, one for each size, and perform lookup in parallel.
 In software, however, options for parallel lookup are limited or impossible and the best way is to check each TLB in sequence.
-Most TLB access will be to normally sized pages, causing most lookups on superpages to be unsuccessful, wasting cycles.
+We imagine most TLB access in Gotos will be to normally sized pages, causing most lookups on superpages to be unsuccessful, wasting cycles.
 To side-step this issue, a superpage translation is treated as multiple smaller pages in Gotos.
 
 This approach lets us utilise just a single TLB and improves translation speed in the normal case when pages have the default size of 4096 bytes.
 The disadvantage of this approach is that a single superpage splits into 1024 normal pages, potentially causing space in the TLB to be wasted.
+
 It may be beneficial to add a second TLB to distinguish instruction and data in the translation pipeline.
-This would reduce collisions in translations and lead to increased performance.
+The danger with a single TLB is that data and instructions are placed at unfortunate offsets from eachother and translation frequently collides.
+
+---
+
+Adequate testing has not been done to quantify the performance impact of a single TLB versus multiple TLBs.
+With our limited testing of small programs, it has not yet become an issue.
+It should be simple to add a second TLB if it proves to be useful.
+
+---
 
 The TLB may be partially or fully invalidated by `sfence.vma`.
 
@@ -124,14 +133,22 @@ This function is severly limited and still requires great care to be used correc
 **`c.SafelyAcquire()` can not be used with mutexes that are `Lock()`ed in a blocking manner**, which excludes mutexes on system resources like `Memory` and `ReservationSets` as those are routinely `Lock()`ed in normal execution.
 All locking of mutexes that wrap a `c.RaiseInterrupt()` and `c.AwaitInterruptResponse()` should exclusively use `c.SafelyAcquire()`, even in the cases where it does not wrap such a pair.
 
-For these reasons, we recommend system implementations to use the *giant lock* technique as often as possible to reduce complexity. @wikipedia-bkl
-A single mutex can be used to wrap most or all system trap handlers where access to shared system resources *other than* `Memory` and `ReservationSets` occurs.
+The source for these issues is the core decision to only partially emulate execution.
+Had we decided to emulate execution in full, there would be no `Lock` or `Mutex`, there would only be RISC-V machine code that the emulator could appropriately deal with.
+Interprocessor interrupts and interprocessor communication in general is a fundamental challenge of this approach.
 
-`Memory` and `ReservationSets` should never wrap another mutex outside the `cpu` package, nor does it ever make sense for them to do so.
-It is likely best that they are never accessed in "raw" form as `cpu` exposes functions to update these in a correct manner, and the fact that these system resources are exposed is an unfortunate side-effect of the system abstraction in use.
+---
 
-It should also be highlighted that not every trap handler would require locking, and interrupt-handlers especially should likely never attempt to acquire a lock.
+> For these reasons, we recommend system implementations to use the *giant lock* technique as often as possible to reduce complexity. @wikipedia-bkl
+> A single mutex can be used to wrap most or all system trap handlers where access to shared system resources *other than* `Memory` and `ReservationSets` occurs.
+>
+> `Memory` and `ReservationSets` should never wrap another mutex outside the `cpu` package, nor does it ever make sense for them to do so.
+> It is likely best that they are never accessed in "raw" form as `cpu` exposes functions to update these in a correct manner, and the fact that these system resources are exposed is an unfortunate side-effect of the system abstraction in use.
+>
+> It should also be highlighted that not every trap handler would require locking, and interrupt-handlers especially should likely never attempt to acquire a lock.
+>
+> On the whole, we recommend users steer away from IPIs entirely in Gotos and instead use other techniques and mechanisms to ensure consistency.
+> IPIs are included only to provide an analog to real processors, but will usually not be the optimal solution in Gotos for performance or ease of use.
+> An alternative method for unmapping memory safely -- which avoids TLB-shootdowns in most cases -- is outlined in appendix \@ref(ap:shootdown-alternative).
 
-On the whole, we recommend users steer away from IPIs entirely in Gotos and instead use other techniques and mechanisms to ensure consistency.
-IPIs are included only to provide an analog to real processors, but will usually not be the optimal solution in Gotos for performance or ease of use.
-An alternative method for unmapping memory safely -- which avoids TLB-shootdowns in most cases -- is outlined in appendix \@ref(ap:shootdown-alternative).
+---

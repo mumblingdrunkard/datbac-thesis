@@ -1,6 +1,7 @@
 # A Teaching Operating System based on Simulation for Third Semester Students {#app:proposal}
 
-<!--
+**NOTE:** besides this notice, this is a word-for-word copy of the original thesis proposal. @thesis-proposal
+
 ### Administrative {-}
 
 - Supervisor: Hein Meling
@@ -16,7 +17,6 @@
 
 Become proficient in Go programming.
 Students are expected to review textbook material and various sources to get inspiration for developing the student assignments in this project.
--->
 
 ## Project description {-}
 

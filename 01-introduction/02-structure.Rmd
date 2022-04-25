@@ -5,7 +5,17 @@ The next chapter covers previous, relevant work that has been done concerning th
 In the proceeding two chapters we describe the architecture and implementation as well as challenges faced.
 These mainly concern the architecture and implementation of the processor emulator, but we also highligt areas where system implementations should be careful.
 
-We propose a set of assignments that use Gotos in the fifth chapter, and how these fit into the current curriculum.
-These assignments, while the
+We propose a set of assignments that use Gotos in the fifth chapter, and how these can fit into the current curriculum as well as how we might extend the assignments into a second or even third OS course.
 
 The rest of the thesis is dedicated to reflection and conclusion.
+
+---
+
+> We may frequently opine in the technical chapters if it is locally relevant.
+>
+> We do so in an effort to avoid excessive cross-referencing and to provide context where it is relevant instead of delaying it to the reflection.
+> It should still be noted that these opinions are far from objective fact and we do not proclaim to be experts of the topics presented in this thesis.
+>
+> When larger recommendations, opinions, and experiences are recounted, we try to section them off and make it clear that this is a break of the normal flow of information, like these three paragraphs.
+
+---

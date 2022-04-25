@@ -2,12 +2,42 @@
 % any definitions, remove as many as you like, add as many as you'd like, but
 % don't delete the file.
 
-\newglossaryentry{latex} {
-    name=latex,
-    description={Is a markup language, specially suited for scientific documents}
-}
-
 \newglossaryentry{golang} {
     name=Go,
-    description={Is a statically typed, compiled programming language designed by Robert Griesemer, Rob Pike, and Ken Thompson.}
+    description={Is a statically typed, compiled programming language designed by Robert Griesemer, Rob Pike, and Ken Thompson}
+}
+
+\newglossaryentry{fence} {
+    name=Memory fence,
+    description={A synchronisation primitive}
+}
+
+\newglossaryentry{trap} {
+    name=Processor trap,
+    description={Is a mechanism for privilege escalation from user-mode to kernel-mode and enables the handling of exceptions}
+}
+
+\newglossaryentry{satp} {
+    name=CSR: SATP,
+    description={Supervisor Address Translation and Protection is a control status register for controlling virtual addressing modes and configuration}
+}
+
+\newglossaryentry{mtval} {
+    name=CSR: MTVAL,
+    description={Machine Trap Value is a control status register containing information about the value that caused a trap}
+}
+
+\newglossaryentry{mepc} {
+    name=CSR: MEPC,
+    description={Machine Exception Program Counter is a control status register containing the value of the program counter as it was before the trap occured}
+}
+
+\newglossaryentry{mcause} {
+    name=CSR: MCAUSE,
+    description={Machine Cause is a control status register containing the cause of the trap}
+}
+
+\newglossaryentry{mhartid} {
+    name=CSR: MHARTID,
+    description={Machine Hart ID is a control status register containing the identity of this RISC-V hart/core}
 }

@@ -11,13 +11,17 @@ Future development might focus on providing a proper interrupt controller and bu
 This would allow for things like asynchronous I/O to be emulated.
 
 Gotos does not provide any actual *timers*, opting instead for *counters* that progress one tick each cycle.
-This is done to provide predictable results when doing things like scheduling in addition to simplifying the implementation slightly.
+This is done to provide predictable results when doing things like scheduling, in addition to simplifying the implementation slightly.
 Predictability is desirable when writing tests for student code to ensure that scheduling is done in the proper order and for the correct amount of cycles.
 
 Counters can be set to interrupt a core in `N` cycles by calling `c.SetCounter(N)` where `N` is of type `uint64`.
 After `N` cycles have passed, the core will trap with `c.trap(TrapMachineTimerInterrupt)` and the counter will be disabled.
 Re-enable the counter by setting it again.
 
+---
+
 Note that RISC-V has certain guarantees about *LR/SC-loops* of certain limited length; that they will always be able to eventually progress and avoid livelock.
 A core that is interrupted too often will most likely interfere with this guarantee and ensure that progress is rarely made, if ever.
 We therefore recommend that the counter never be set lower than 1000 cycles outside of demonstration where one can ensure no LR/SC-loops occur.
+
+---

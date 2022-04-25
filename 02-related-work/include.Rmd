@@ -1,5 +1,7 @@
 # Related work
 
+In this chapter we present previous, related, or inspiring works that have influenced the development of this project.
+
 - Nielsen et. al. 2019
 
 - Nachos

@@ -1,6 +1,6 @@
 ## Executing instructions
 
-Most processors have an fetch-execute cycle, a general flow that instructions follow through the processor; our emulator is no different.
+Most processors have a fetch-execute cycle, a general flow that instructions follow through the processor; our emulator is no different.
 Cores can be in three general states: *running*, *halted*, and *stopped*.
 
 ### Core startup

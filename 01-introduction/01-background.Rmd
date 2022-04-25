@@ -22,9 +22,9 @@ At the time of writing, this is a third semester course and the required and rec
 - DAT110 Introduction to Programming,
 
 which appear as first and second semester courses, utilising MATLAB and Python respectively.
-While these languages are certainly useful, they don't require, nor give much intuition about computer architecture.
+While these languages are certainly useful, they don't require, nor give much intuition about computer architecture or other low-level details necessary to understand operating systems.
 
-#### DAT320 learning outcomes @dat320-web
+#### DAT320 learning outcomes
 
 At the time of writing, these are the currently listed learning outcomes. @dat320-web
 
@@ -49,4 +49,13 @@ At the time of writing, these are the currently listed learning outcomes. @dat32
 
 The current course is taught through a series of lectures and lab-assignments, and parts of the book _Operating Systems: Three Easy Pieces_. @ostep
 
+The lab-assignments are generally structured as combinations of some programming-exercises and multiple-choice questions.
+They are submitted through git and are automatically graded on submission.
+
+- *Lab 1: Introduction to Unix* is an introduction to several new concepts and technologies, getting set up to do course-work and getting somewhat familiar with required or otherwise useful tools.
+
+- *Lab 2: Introduction to the C Programming Language* introduces system programming
+
 ### Motivation
+
+The general motivation for this effort is to provide assignments that better reflect the experience of developing an operating system.

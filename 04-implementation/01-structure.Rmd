@@ -36,6 +36,8 @@ This enables a core to access system functionality as a sort of co-processor ins
 As system code is expected to exist in a different package, Gotos exposes multiple functions to access internal resources of a `Core`.
 These functions are written in a way to minimise incorrect usage and usually take the form of getters and setters with named resources.
 
+We achieve a safe interface for most resources by only exposing functions with 
+
 #### Registers
 
 Take, for example, the function `Core.GetIRegister()` which takes an argument of type `Reg` and returns a `uint32`.
@@ -50,6 +52,9 @@ This pattern of registers being accessible to external consumers, only through n
 
 #### Virtual memory
 
+***TODO:*** system should be able to read from a process' address space.
+We should provide interfaces for this.
+
 #### Physical memory
 
 Although physical memory is already accessible to the system (because it implements the `System` interface from which the memory comes), it is semantically "unaesthetic" to access system resources in a direct manner such as `s.memory.WriteRaw(...)`.
@@ -57,4 +62,13 @@ Although physical memory is already accessible to the system (because it impleme
 The code that runs through a trap-handler (which applies to most of the code students will be writing), runs *as if* it is executing on the core.
 It logically follows that we should access system resources from the perspective of the core.
 We provide two functions to access physical memory from the perspective of the core: `AtomicStoreWordPhysicalUncached` and `AtomicLoadWordPhysicalUncached`.
-These functions are intended to be rarely used for critical cases where atomicity is required, such as when reading or updating the page table.
+
+---
+
+These functions are intended to be used sparingly for critical cases where atomicity is required, such as when reading or updating the page table.
+
+---
+
+#### Other privileged functionality
+
+

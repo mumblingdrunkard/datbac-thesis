@@ -1,0 +1,17 @@
+## Separate courses
+
+While not directly relevant to the Gotos project, we would like to briefly argue for the case of splitting the DAT320 course in two or more parts: a systems programming course, and an OS elective.
+Our experience with the course is that it becomes too broad and has little relevance to other courses taken throughout the programme.
+
+This is not to say that caches and virtualisation are irrelevant, but that they are perhaps better taught in relation to other systems than operating systems.
+
+It becomes burdensome for third semester students who have only done one or two semesters of programming and have not been through a course teaching basic algorithms and data structures.
+Suddenly, one is expected to learn statically typed languages, stacks (call stack), trees (multi-level page-tables), low-level memory layout, instruction sets, and more.
+All this in addition to systems level programming which encompasses topics such as containers, benchmarking, testing, etc, which are largely skimmed because of the breadth of the course.
+
+It is clear to us that this composition leaves too little room to explore all concepts with satisfactory depth; especially systems programming.
+
+We believe that an OS course which teaches operating systems, and makes use of the Gotos framework for assignments, is better taught as a fourth or fifth semester elective when students have learned about basic algorithms and data structures, have some experience using statically typed languages, know how testing and benchmarking works, and have generally more tools to deal with the low-level complexities encountered in operating system development.
+
+A systems programming course could explore interesting, and highly relevant concepts such as containers, continuous integration, benchmarking, system interfaces, concurrent execution, and general system architecture, without having to learn operating systems from the bottom up.
+Gotos should not be included in such a course as it is intended to teach OS concepts by implementing OS components, and not to teach systems programming.

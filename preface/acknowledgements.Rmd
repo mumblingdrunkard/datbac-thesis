@@ -1,1 +1,13 @@
 # ACKNOWLEDGEMENTS {-}
+
+I would like to thank my supervisor *Prof. Hein Meling*, who besides providing valuable input and helping me see angles I had previously ignored, has given me free reign to make this project my own and has been encouraging and enthusiastic about most every idea and vision I have had for the project.
+Thank you.
+
+I want to thank *Vilhelm Assersen* -- my partner for my *other* bachelor's project -- for his patience and understanding when I needed time to work on this project instead.
+Thank you.
+
+Thank you to *Joachim Andreassen* for being an excellent rubber duck @rubber-duck while I was thinking out loud.
+Thank you.
+
+A thank you to *Sindre Vatnaland*, *Henrik Nilsen*, *Vidar André Bø*, *Ardijan Rexhai*, *Lars Sverre Levang*, *Erlend Fagerheim Eide*, *Matias Lyngnes Ramsland*, *Martin Dimmen*, *Ove Oftedal*, *Mari Bjordal*, *Benjamin Mydland*, and *Jonas Emanuel Gilje* -- some of my fellow students -- for putting up with me when I have been too excited about my own projects.
+I like to think you are my friends; thank you.

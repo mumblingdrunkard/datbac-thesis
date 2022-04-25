@@ -20,8 +20,7 @@ library(DiagrammeR)
 ```
 
 ---
-title: "The Gotos framework"
-subtitle: "for teaching operating systems to undergrads"
+title: "A partially emulated multicore instructional operating system"
 date: "`r format(Sys.Date(), '%d. %B %Y')`"
 
 cover-page: "cover.pdf"
@@ -103,18 +102,15 @@ header-includes:
 \raggedbottom
 
 \tableofcontents
-<!--
+
 \listoffigures
-\listoftables
 \lstlistoflistings
-\printglossaries
--->
+\printglossary[type=main,nonumberlist]
+\printglossary[type=\acronymtype,nonumberlist]
 
 \cleardoublepage
 
 \pagenumbering{arabic}
-
-# (PART) INTRODUCTION {-}
 
 ```{r child='01-introduction/include.Rmd'}
 ```
@@ -123,8 +119,6 @@ header-includes:
 
 ```{r child='02-related-work/include.Rmd'}
 ```
-
-# (PART) MAIN BODY {-}
 
 \cleardoublepage
 
@@ -142,8 +136,6 @@ header-includes:
 ```
 
 \cleardoublepage
-
-# (PART) REFLECTION {-}
 
 ```{r child='06-discussion/include.Rmd'}
 ```
@@ -168,6 +160,11 @@ header-includes:
 \cleardoublepage
 
 ```{r child='C-user-space/include.Rmd'}
+```
+
+\cleardoublepage
+
+```{r child='D-book/include.Rmd'}
 ```
 
 \cleardoublepage

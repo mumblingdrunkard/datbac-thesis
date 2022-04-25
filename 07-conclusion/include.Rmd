@@ -1,1 +1,6 @@
 # Conclusion
+
+It is clear to us that Gotos is not a finished project, but it sets down a solid foundation for further development.
+Future work should focus on using it for creating real world assignments so that the experience may be refined and enhanced.
+
+

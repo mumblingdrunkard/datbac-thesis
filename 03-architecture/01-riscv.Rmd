@@ -29,9 +29,10 @@ Intended as a reasonable target for applications running on modern systems:
 - I, the base RISC-V instruction set of 40 instructions.
 - M, extension for multiplication and division.
 - A, extension for atomic operations.
-- F, extension for single precision floating-point arithmetic.
-- D, extension for double precision floating-point arithmetic.
-- Zicsr, extension for user-mode control-status registers. Rarely used and probably should not be for user-mode programs as we are unsure about the correctness of its implementation.
+- F, extension for single precision floating-point arithmetic (disabled by default).
+- D, extension for double precision floating-point arithmetic (disabled by default).
+- Zicsr, extension for user-mode control-status registers.
+  Rarely used and probably should not be for user-mode programs as we are unsure about the correctness of its implementation (disabled by default).
 - Zifencei, extension for instruction fence. Contains only one instruction that forces a core to flush its instruction cache.
 
 The Gotos RISC-V emulator implements all of these extensions, allowing most system-independent code to compile and execute without any problems.
@@ -45,7 +46,11 @@ However, test-applications should preferably be written only with the I, M, A, a
 The F, D, and Zicsr extensions require more work and quality-assurance before they can be reliably used in an application and are disabled by default.
 If not enabled, instructions from these three extensions will raise a `TrapIllegalInstruction`.
 
-See appendix \@ref(ap:user-space) for how to write and compile applications for the emulated processor.
+For the Zicsr extension, note that it being disabled does not mean that the *Control Status Register* file (`csr` field/file of `Core`) is disabled.
+This register file is required for the operating system to properly work.
+The Zicsr is specifically about user-mode support for csr interaction.
+
+See appendix \@ref(ap:user-space) for how to write and compile applications for the emulated processor, recommended compilation settings, and more.
 
 ### The RISC-V privileged architecture
 
@@ -193,29 +198,34 @@ A brief summary is provided here:
 The steps outlined have many missing pieces and make assumptions that we don't encounter invalid translations.
 In these cases, appropriate page-faults are raised depending on the type of access that triggered the page-fault.
 
-#### The Ex10 page-table format
+---
 
-A simpler way to explain this format is by using a smaller, but similar two-level page-table format that we call Ex10 (example 10-bit).
-In this format we split 10-bit virtual addresses into three pieces: **vpn1** (3b), **vpn0** (3b), and an **offset** (4b).
-Thus, pages/frames are 16 bytes each.
-We use a PTE-size of 2 bytes, meaning each page/frame can hold 8 entries, corresponding to the 3 bits of each part of the **vpnX**.
+> **The Ex10 page-table format**
+>
+> A simpler way to explain this format is by using a smaller, but similar two-level page-table format that we call Ex10 (example 10-bit).
+> In this format we split 10-bit virtual addresses into three pieces: **vpn1** (3b), **vpn0** (3b), and an **offset** (4b).
+> Thus, pages/frames are 16 bytes each.
+> We use a PTE-size of 2 bytes, meaning each page/frame can hold 8 entries, corresponding to the 3 bits of each part of the **vpnX**.
+>
+> An Ex10 PTE consists of an 8-bit **PFN** and 8 flag bits.
+>
+> By using a relatively small format, we can do the translation visually as shown in \@ref(fig:03-ex10).
 
-An Ex10 PTE consists of an 8-bit **PFN** and 8 flag bits.
-
-By using a relatively small format, we can do the translation visually as shown in \@ref(fig:03-ex10).
 
 ```{r 03-ex10, fig.cap='An example using the Ex10 page-table format to translate a 10-bit virtual address.', out.width='5in'}
 knitr::include_graphics(normalizePath('fig/ex10.pdf'))
 ```
 
-Here we have found the value of `v1` by following the address step by step.
-The first level of the page-table is stored in the frame that starts at address `20`.
-We calculate the position of the first PTE as `24` (row 2, column 4).
-We take the **PFN** value of `04` to the next step.
-We repeat this one more time and we find that `v1` is located at `33` (row 3, column 3) and has a value of `AB`.
+> Here we have found the value of `v1` by following the address step by step.
+> The first level of the page-table is stored in the frame that starts at address `20`.
+> We calculate the position of the first PTE as `24` (row 2, column 4).
+> We take the **PFN** value of `04` to the next step.
+> We repeat this one more time and we find that `v1` is located at `33` (row 3, column 3) and has a value of `AB`.
+>
+> Notice that while virtual addresses are only 10 bits, the resulting physical address can be as large as 12 bits (8-bit frame number and 4-bit offset).
+> This is the case for Sv32 as well which translates 32-bit virtual addresses to 34-bit physical addresses, meaning a full 16GiB can be in use, even though processes can only map 4GiB.
 
-Notice that while virtual addresses are only 10 bits, the resulting physical address can be as large as 12 bits (8-bit frame number and 4-bit offset).
-This is the case for Sv32 as well which translates 32-bit virtual addresses to 34-bit physical addresses, meaning a full 16GiB can be in use, even though processes can only map 4GiB.
+---
 
 ### The program counter/instruction pointer
 

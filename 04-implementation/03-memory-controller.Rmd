@@ -16,4 +16,4 @@ However, for "normal" usage -- where spatial and temporal locality applies -- ca
 
 ### TLB
 
-A similar hash-map implementation is used for the TLB as for the caches, though it has a separately configurable probe-depth.
+A similar hash-map implementation is used for the TLB as for the caches, though it has a separately configurable probe-depth and size.

@@ -1,31 +1,39 @@
 # The assignments
 
-We take a different approach from the lab-assignments of yesteryear, providing ones that are mostly guided.
-We do this because we believe that by *pulling* the students through the labs instead of *pushing*, we will be able to cover more material.
-This guidance is also somewhat necessitated by the sheer complexity of Gotos.
+This chapter is a short overview and description of the proposed assignments.
+While we originally wanted to create a framework *and* fully featured assignments, we have decided that our limited time is better spent creating a more fully-featured framework which works, rather than focusing on complete assignments without a working framework.
 
-We have only dedicated effort to creating assignments for Gotos and not for the entire DAT320 course.
-The idea is that these few assigmnents will replace the current assignments that revolve around implementing OS components.
-Mainly because there are already good labs in place for the parts that we don't cover.
+We believe that assignments are better created in collaboration with someone who has experience teaching the subject and the core code has had some more time to mature.
 
-All assignments can be found in appendix [TODO]
 
-## Assignment - The processor
+---
 
-This assignment should cover the basics of the emulated processor:
+**Note** that these assignments are only *proposed assignments*.
+Developing good assignments is an exercise in pedagogy which is much outside the scope of this project and thesis.
+However, the general progression of the assignments should be such that a fully working system is incrementally built, which we believe to be the case for the following proposals.
 
-- registers,
-- instructions and some basic assembly,
-- how programs are stored in memory,
-- how to run programs in Gotos,
-- processes, queues, and simple scheduling,
-- simple system calls.
+We wish to provide a book that covers the A to Z of Gotos and contains in-depth explanations and many examples and exercises.
+A rough draft of the first few chapters can be found in appendix \@ref(ap:book).
 
-## Assignment - Scheduling and scheduler metrics
+---
 
-After covering the mechanisms of scheduling and process execution, this assignments should cover more sophisticated scheduling policies.
+## I - Virtualising the processor {#sec:assignment-i}
 
-Keywords:
+This assignment should cover the basics of the emulated processor and how we might virtualise and share access to the computational resource.
+Keywords are:
+
+- registers, instructions, and basic assembly,
+- program representation in memory, and how to run programs in Gotos,
+- limited direct execution and simple system calls, and
+- processes, queues, and simple scheduling.
+
+In this assignment, students should get familiar with the Gotos processor and low-level operation of a processor.
+We believe that having this fundamental knowledge is critical to properly understanding the role and operation of the operating system.
+
+## II - Scheduling and scheduler metrics {#sec:assignment-ii}
+
+After covering the mechanisms of processor virtualisation and simple scheduling, this assignment should cover more sophisticated scheduling policies, as well as metrics for scheduler performance.
+Keywords are:
 
 - fifo,
 - preemption,
@@ -35,51 +43,102 @@ Keywords:
 - rr,
 - fair schedulers.
 
+We should provide a simple interface that can be used to implement several schedulers:
 
+```{.go}
+type Scheduler interface {
+    push(pcb PCB)
+    pop() PCB
+}
+```
 
-## Assignment - Memory virtualisation and management
+Students should implement several selected schedulers, each with different restrictions and assumptions imposed until they end up with a scheduler that conforms to the requirements of proceeding lab-assignments.
+
+## III - Memory virtualisation and management {#sec:assignment-iii}
 
 This assignment should cover the basics of memory virtualisation and management using paged memory systems.
-
-Keywords:
+It may be necessary to split this assignment in two parts as it presents several subtleties 
+Keywords are:
 
 - the Sv32 format,
 - creating a page-table,
 - enabling paging,
-- caveats
+- caveats,
     - TLB flushing
 - allocating pages,
-    - `page_map()` and `page_unmap()`
+    - `pmap()` and `punmap()`
 - managing frames.
 
+The goals
 
-## Assignment - Processes and threads
+Note that this assignment can become quite advanced and might require students to understand unfamiliar concepts of memory at a very deep and fundamental level.
+Memory virtualisation likely requires a bottom-up understanding of memory that may not be sufficiently covered by the time that students have this course.
+This is especially true when considering Gotos requires one to jump straight from no virtual addressing, to virtual addressing with a multi-level page-table and cached translations.
+
+For this assignment, it may be necessary to provide several ready-made helper methods such as `walkTable`, `setPTE`, etc., if the lab is to be completed in a reasonable amount of time.
+
+Another alternative is to extend the capabilities of the Gotos processor emulator.
+We are not locked to the RISC-V privileged specification and it only serves as inspiration.
+We have attempted to stay close to the privileged specification, but there is nothing that hinders adding registers and interfaces for segmented memory management or a single-level page table with a constrained address space.
+Thus it may be that we can support several different virtualisation methods and allow students to experiment with all of them.
+
+How this integrates with the rest of Gotos would have to be carefully planned.
+How does it interact with the **satp** register?
+Can we add a configuration parameter which overrides the `translate` function? Something like `alternativeVMA` could be introduced and a `type Translator interface` could be added to provide some modularity.
+
+## IV - Processes {#sec:assignment-iv}
 
 With paging enabled and frame management covered, this lab should cover more advanced process interactions and we expand the process with new capabilities.
+Keywords are:
 
-Keywords:
-
+- properly loading programs, (loading programs from ELF files and placing them at the correct memory locations. Should be mostly provided, but it should be properly explained.)
 - `fork()`,
 - `exec()`,
-- `spawn()`, and
-- `join()`.
 
+The goal of this assignment is to tie together the concepts presented in the previous assignments and end up with a working, albeit limited system.
+Where file systems are needed, we can likely borrow the file system provided to us by the OS.
 
-## Assignment - Interlude: concurrency in (single core) userland
+## V - She sells *C shell*
 
-With threads covered, this assignment should cover how programs executing on top of Gotos can achieve correct concurrent execution using locks and atomics.
+To cap off the assignments, we want students to write a shell.
+This is an exercise that should cement the knowledge students have gained about system calls, interrupt handlers, resource management, etc.
+Keywords are:
 
-Keywords:
+- standard input and output,
+- program setup, passing arguments, fork, and exec,
+- status values,
 
-- Mutex
-- Atomics
+We want to provide a mostly finished system with stand-ins for the missing components that have not been covered, such as a file system and an input/output device.
 
+We can probably use the underlying file system to provide files, though a small layer is likely needed so that user-mode programs can interact with them.
 
-## Assignment - (ADVANCED) Multicore I
+We can "abuse" the main thread and use it as an ad-hoc input/output device and we may add interfaces to read from and write to this IO.
+Because of the way interrupts are implemented, the main thread can interrupt the core to signal that something has been written to the input.
 
-A proposed assignment that should introduce the problems encountered when executing accross multiple cores.
+We envision this assignment as a final project for the course and it should touch everything covered in all the assignments.
 
-Keywords:
+## Interlude - Threads and concurrency
 
-- TLB shootdown
-    - `page_unmap()` in a multithreaded process.
+This assignment depends on assignment IV.
+With processes implemented, this assignment should cover how programs executing on top of Gotos can achieve correct concurrent execution accross threads using mutual exclusions or other means.
+Keywords are:
+
+- `spawn()` and `join()`,
+- critical sections,
+- mutex, and
+- lock-free programming.
+
+The goal of this assignment is to give students a peek into concurrent programming, challenges that arise, and solutions for these challenges.
+
+One task we imagine to be useful is the implementation of a mutex with C and assembly.
+There are also several lock-free approaches to data-structures that can be useful to look at.
+
+## Advanced - Multicore I
+
+***TODO*** describe this.
+
+## Appendages
+
+There are a couple topics which do not get any coverage in the proposed assignments:
+
+- 
