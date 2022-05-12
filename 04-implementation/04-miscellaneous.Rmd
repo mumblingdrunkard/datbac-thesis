@@ -4,46 +4,8 @@
 
 ### Traps
 
-### IPIs
+### IPIs {#impl:ipi}
 
-### Environment
+#### Between cores
 
-If we want to have any hope of a stable target for applications targeting the system, we should define the execution environment.
-This includes
-
-- how system calls are made,
-- system call numbers, and
-- a minimal C runtime.
-
-Still, we have a small environment that will stick around to see the future.
-***This is the defining document for these behaviours, values, and interfaces.
-These are currently not defined elsewhere***
-
-#### System call numbers
-
-System call numbers are placed in register **a0**, with arguments being passed in registers **a1** to **a7**.
-System call number 1 is `exit(int)`.
-System call numbers 0-511 are reserved for use by official specification.
-System call numbers 512-1023 are reserved for custom use.
-System call numbers 1023-4095 are reserved for corrections of stabilised system calls that have incorrect semantics, but have to stick around for backwards compatibility.
-System call numbers 4096 and above are currently unused and may be claimed for official use or delegated to other purposes.
-
----
-
-Given enough development, compatibility layers can be developed that change the system interface for certain programs.
-E.g. a program may be launched in Linux-mode and all system-calls will be bitwise OR'ed with some given flag.
-
----
-
-#### Interrupt signals
-
-***NOTE:*** These values only apply to the current version of how interrupts are implemented.
-Should a future implementation change the implementation of interrupts, say by adding a proper interrupt-controller, this specification can be considered null and void.
-
-Interrupt code 0 is reserved as the no-interrupt state.
-Interrupt code 1 signals a core to immediately shut down.
-Interrupt code 2 signals a core to transition from a running state to a halting state.
-Interrupt codes 1-511 are reserved for simple OS-level signals.
-Interrupt codes 512-1023 are reserved for custom use.
-Interrupt codes hex `8000_0000` to `FFFF_FFFF` are reserved for signalling a discriminating TLB shootdown; the left-most bit is set and the remaining 31 bits are intended for transmitting a 9-bit ASID and 22-bit VPN.
-Interrupt codes hex `6000_0000` to `7FFF_FFFF` are reserved for 
+#### System → Core

@@ -3,6 +3,7 @@ locale <- Sys.setlocale("LC_TIME", "C")
 options(tinytex.clean=FALSE) # to keep .aux file so glossary can be extracted
 knitr::opts_chunk$set(echo=F, fig.align='center', out.width='3.5in')
 library(kableExtra)
+# library(xfun)
 
 if (knitr::opts_knit$get("rmarkdown.pandoc.to") == "latex") {
   kable <- function(data, caption='', col.names=c()) {
@@ -74,7 +75,8 @@ headrulewidth: 0pt
 footrulewidth: 0pt
 
 biblatex: true
-bibliography: bibliography.bib
+bibliography:
+ - bibliography.bib
 biblio-style: ieee
 csl: ieee.csl
 csl-refs: true
@@ -132,17 +134,12 @@ header-includes:
 
 \cleardoublepage
 
-```{r child='05-assignments/include.Rmd'}
+```{r child='05-discussion/include.Rmd'}
 ```
 
 \cleardoublepage
 
-```{r child='06-discussion/include.Rmd'}
-```
-
-\cleardoublepage
-
-```{r child='07-conclusion/include.Rmd'}
+```{r child='06-conclusion/include.Rmd'}
 ```
 
 \cleardoublepage
@@ -159,12 +156,22 @@ header-includes:
 
 \cleardoublepage
 
-```{r child='C-user-space/include.Rmd'}
+```{r child='C-assignments/include.Rmd'}
 ```
 
 \cleardoublepage
 
-```{r child='D-book/include.Rmd'}
+```{r child='D-user-space/include.Rmd'}
+```
+
+\cleardoublepage
+
+```{r child='E-book/include.Rmd'}
+```
+
+\cleardoublepage
+
+```{r child='F-recommendation/include.Rmd'}
 ```
 
 \cleardoublepage

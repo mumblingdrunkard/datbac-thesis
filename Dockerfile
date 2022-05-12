@@ -19,7 +19,18 @@ RUN dnf install libcurl-devel -y
 RUN dnf install openssl -y
 RUN dnf install openssl-devel -y
 
-RUN R -e "install.packages(c('DiagrammeR', 'webshot', 'rmarkdown', 'bookdown', 'httr', 'kableExtra', 'tufte'), repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages(                           \
+                c('DiagrammeR',                       \
+                  'webshot',                          \
+                  'rmarkdown',                        \
+                  'bookdown',                         \
+                  'httr',                             \
+                  'kableExtra',                       \
+                  'remotes',                          \
+                  'tufte'),                           \
+                repos='https://cloud.r-project.org/')"
+
+RUN R -e "remotes::install_github('yihui/knitr')"
 
 RUN dnf install bzip2 -y
 

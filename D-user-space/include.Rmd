@@ -1,0 +1,210 @@
+# Writing user-space applications for the Gotos emulator {#ap:user-space}
+
+We provide a short guide for writing and compiling applications for Gotos, either for testing, teaching, or any other purpose.
+We do this with C\ @k&r and *some* RISC-V assembly\ @rv5vol1.
+
+## Constraints
+
+We are working with some constraints in Gotos:
+
+- there is no standard library (yet),
+- there is no HAL (for *Hardware Abstraction Layer*) (yet),
+- there are no libraries (yet).
+
+There is nothing in particular that prevents us from implementing these things, other than time-constraints.
+
+## Minimal working example
+
+First we need a compiler.
+We have decided to use Clang\ @clang, which has had official support for RISC-V cross-compilation since version 9\ @clang-riscv.
+We can check the compiler version with `clang --version`.
+We will also need to have the the LLVM (for *Low Level Virtual Machine*) linker `lld` installed\ @lld.
+GCC\ @gcc is also a valid alternative, but the flags may be different and certain attributes (such as `_Noreturn`) may require different syntax.
+
+### The code
+
+The entry-point for most C programs will be `int main()`.
+In the listing below we have a very simple program that only returns the number 42\ @adams1979.
+We put this code in a file named `src/main.c`.
+
+```{.c}
+// src/main.c
+int main() { return 42; }
+```
+
+### Compiler flags
+
+To compile this program to be compatible with our emulator, we have to make it as bare as possible, including only the necessary parts.
+To do this, we have to tell the compiler that we don't want to include the standard library.
+For clang, this is achieved with `-nostdlib`.
+
+We will also assume that we are cross-compiling this from a non-RISC-V platform, meaning we have to specify the target as a 32-bit RISC-V processor: `--target=riscv32`.
+
+We may also want to specify the exact architecture we're targeting, depending on the extensions of risc-v that are implemented.
+We do this with `-march=rv32ima` for the *I*, *M*, and *A* extensions.
+We believe this is a decent target for most applications that one may desire to run with Gotos.
+However, for floating-point arithmetic to work, we will have to provide methods in the runtime to deal with `float` and `double`, or we can use `-march=rv32imafd` which can be shortened to `-march=rv32g`.
+Compressed instructions are not supported, but if a future version supports it, the compiler can be instructed to use it by appending `c` to the flag: `-march=rv32gc` or `-march=rv32imac`.
+More information about this flag and others can be found in a blog-post by SiFive\ @sifive-march, a company that specialises in intellectual property pertaining to RISC-V.
+
+We compile the program with these flags like so:
+
+```{.sh numbers=none frame=none}
+clang -nostdlib --target=riscv32 -march=rv32ima src/main.c
+```
+
+Doing this, the compiler is likely to emit a warning:
+
+(ref:cap-compile-warning) Compiling `src/main.c` with `-nostdlib` will cause a warning about missing symbols.
+
+```{.sh numbers=none frame=none}
+ld.lld: warning: cannot find entry symbol _start; defaulting to ...
+```
+
+This happens because `int main()` is in fact *not* the real entry point for C programs, but is instead called by `_start()`, the real entry point.
+
+### Entry point
+
+We will create another file `src/_start.c` whose only purpose is to call `main()`:
+
+```{.c #lst:start-attempt caption="Defining the missing symbol."}
+// src/_start.c
+extern int main();
+
+void _Noreturn _start(void) { main(); }
+```
+
+The explanation for the above code is as follows:
+
+- we proclaim there exists in our program, a function with the signature `int main()`; we do not know where, but we assume it exists, then
+- we define a function `void _start(void)` which only calls `main()`; this function is marked `_Noreturn` as, when it finishes, it should not continue normal execution.
+
+Once again, we compile:
+
+```{.sh numbers=none frame=none}
+clang -nostdlib --target=riscv32 -march=rv32ima \
+    src/main.c                                  \
+    src/_start.c
+```
+
+and we still get warnings:
+
+```{.txt numbers=none frame=none}
+src/_start.c:4:1: warning: function declared 'noreturn'
+should not return [-Winvalid-noreturn]
+```
+
+### Exit
+
+It is not so easy to *not return* from a function.
+Even though we didn't explicitly write `return`, the compiler implicitly added a return-call to the function.
+
+To *not return*, we will have to define `void sys_exit(int)` which should perform a system call that ends the program with a return-code.
+We can declare in `src/_start.c` that this function should exist, then call this function with the returned value from `main()`:
+
+```{.c #lst:start-attempt2 caption="Avoid returning from the entry-point."}
+// src/_start.c
+extern int main();
+extern void _Noreturn sys_exit(int);
+
+void _Noreturn _start(void) { sys_exit(main()); }
+```
+
+We also have to define `sys_exit` in a special way.
+We cannot write a function in C that doesn't return; instead we have to resort to some assembly in `src/sys_exit.s`:
+
+```{.asm #lst:sysexit caption="Defining the exit function"}
+# src/sys_exit.s
+.section .text
+.globl    sys_exit
+.type sys_ext, @function
+
+sys_exit:
+    mv    a1, a0
+    li    a0, 1
+    ecall
+```
+
+The above assembly code declares a function named `sys_exit`.
+This function does three things:
+
+- `mv a1, a0`: move value of register `a0` (the integer argument passed to `sys_exit`) into register `a1`,
+- `li a0, 1`: set the value of register `a0` to 1, the system-call number of `sys_exit`, then
+- `ecall`: environment call to the system; this should cause the OS to gracefully exit the program.
+
+Assuming the OS has an appropriate function implemented to handle a system-call number of 1, this should execute that system-call and not return control to the process.
+
+Finally, we compile:
+
+```{.sh numbers=none frame=none}
+clang -nostdlib --target=riscv32 -march=rv32ima \
+    src/main.c                                  \
+    src/_start.c                                \
+    src/sys_exit.s
+```
+
+and we get no warnings!
+Our output file is named `a.out`.
+
+### An executable binary
+
+The output format from Clang is an ELF file (when cross-compiling for riscv).
+This file consists of several sections or "segments" which contain various different data.
+The `.text` segment is the interesting part of the file and we can extract it using `llvm-objcopy`:
+
+```{.sh numbers=none frame=none}
+llvm-objcopy -O binary a.out a.text
+```
+
+This will create a file named `a.text` containing the raw binary instructions which can be loaded into memory in Gotos, then executed.
+See section 2.4 in the draft in appendix\ \@ref{ap:book} for a guide on how instructions can be loaded into memory and executed, starting at an arbitrary address.
+
+### A makefile
+
+It's nice to have a makefile:
+
+```{.Makefile #lst:makefile caption="Makefile to compile the minimal example."}
+CC = clang -nostdlib --target=riscv32 -march=rv32ima
+OBJCOPY = llvm-objcopy
+
+a.text: a.out
+    ${OBJCOPY} -O binary a.out a.text
+
+a.out:
+    ${CC} src/_start.c   \
+          src/sys_exit.s \
+          src/main.c
+
+.PHONY: clean
+
+clean:
+    -@rm -rf a.out a.text
+```
+
+## Caveats
+
+The lack of a runtime means that many functions are missing; functions that the compiler generally assumes to be available.
+One of these functions is `memcpy` which becomes very apparent once we do something with strings of adequate size that have to be copied.
+We have to provide our own implementation of `memcpy`:
+
+```{.c #lst:memcpy caption="The simplest memcpy implementation."}
+// src/memcpy.c
+void *memcpy(restrict void*       dst,
+             restrict const void* src,
+             size_t               n   ) {
+    for (size_t i = 0; i < n; i++) *(dst + i) = *(src + i);
+    return dst;
+}
+```
+
+## General tips when writing user-space code for Gotos
+
+- **Keep it short.**
+  The less code we write, the lower is the chance of encountering lots of errors.
+  Writing code
+
+- **Keep it simple.**
+  Don't build large applications on top of Gotos.
+  It is intended for teaching OS concepts and some systems programming.
+  It is not suitable as a platform for a web-server.
+  Feel free to try porting Vim to it though\ @vim.

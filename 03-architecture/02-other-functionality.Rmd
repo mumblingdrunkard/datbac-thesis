@@ -7,7 +7,7 @@ This section describes those parts.
 
 Gotos does not implement a proper interrupt controller (though it probably should).
 Instead, we present a simplistic interface that is suitable for undergraduate students and does not require additional knowledge of computer architecture.
-Future development might focus on providing a proper interrupt controller and build abstractions on top of this instead of the crude and minimal interface that currently exists.
+Future versions might provide a proper interrupt controller and abstractions on top of this, instead of the crude and minimal interface that currently exists.
 This would allow for things like asynchronous I/O to be emulated.
 
 Gotos does not provide any actual *timers*, opting instead for *counters* that progress one tick each cycle.
@@ -17,11 +17,12 @@ Predictability is desirable when writing tests for student code to ensure that s
 Counters can be set to interrupt a core in `N` cycles by calling `c.SetCounter(N)` where `N` is of type `uint64`.
 After `N` cycles have passed, the core will trap with `c.trap(TrapMachineTimerInterrupt)` and the counter will be disabled.
 Re-enable the counter by setting it again.
+Cores can only modify their own counters.
 
 ---
 
-Note that RISC-V has certain guarantees about *LR/SC-loops* of certain limited length; that they will always be able to eventually progress and avoid livelock.
-A core that is interrupted too often will most likely interfere with this guarantee and ensure that progress is rarely made, if ever.
-We therefore recommend that the counter never be set lower than 1000 cycles outside of demonstration where one can ensure no LR/SC-loops occur.
+> As mentioned: RISC-V has certain guarantees about *LR/SC-loops* of certain limited length; that they will always be able to eventually progress and avoid livelock.
+> A core that is interrupted too often will most likely interfere with this guarantee and ensure that progress is rarely made, if ever.
+> We therefore recommend that the counter never be set lower than 1000 cycles outside of demonstration where one can ensure no LR/SC-loops occur.
 
 ---

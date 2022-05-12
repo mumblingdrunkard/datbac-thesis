@@ -5,18 +5,18 @@ This section briefly covers the situation and motivation around which this thesi
 ### Current situation
 
 This thesis is written for and under guidance of The University of Stavanger (\acrshort{uis}).
-The current situation at UiS is that operating systems concepts are introduced as part of the course _Operating Systems and Systems Programming - DAT320_.
+The current situation at UiS is that OS concepts are introduced as part of the course _Operating Systems and Systems Programming - DAT320_.
 
 "The course gives an introduction to operating systems, how to implement them, and how to program against them efficiently, with particular focus on thread programming and synchronization between threads within a program."
 
-`r tufte::quote_footer('--- Course description for study year 2021-2022. @dat320-web')`
+`r tufte::quote_footer('--- Course description for study year 2021-2022\ @dat320-web.')`
 
-This course is taught using Go @gobook, and some C. @k&r
+This course is taught using Go\ @gobook, and some C\ @k&r.
 
 #### Prerequisites
 
 To gain an idea of what prior knowledge can be expected of students, it is a good idea to look at the prerequisites for the course.
-At the time of writing, this is a third semester course and the required and recommended prerequisites are as follows: @dat320-web
+At the time of writing, this is a third semester course and the required and recommended prerequisites are as follows\ @dat320-web:
 
 - ING100 Introductory course for engineers - Computer science and electrical engineering, and
 - DAT110 Introduction to Programming,
@@ -26,7 +26,7 @@ While these languages are certainly useful, they don't require, nor give much in
 
 #### DAT320 learning outcomes
 
-At the time of writing, these are the currently listed learning outcomes. @dat320-web
+At the time of writing, these are the currently listed learning outcomes\ @dat320-web.
 
 ***Knowledge:***
 
@@ -47,15 +47,37 @@ At the time of writing, these are the currently listed learning outcomes. @dat32
 
 #### Teaching methodology
 
-The current course is taught through a series of lectures and lab-assignments, and parts of the book _Operating Systems: Three Easy Pieces_. @ostep
+The current course is taught through a series of lectures and lab-assignments, and parts of the book _Operating Systems: Three Easy Pieces_\ @ostep.
 
 The lab-assignments are generally structured as combinations of some programming-exercises and multiple-choice questions.
 They are submitted through git and are automatically graded on submission.
 
-- *Lab 1: Introduction to Unix* is an introduction to several new concepts and technologies, getting set up to do course-work and getting somewhat familiar with required or otherwise useful tools.
+- **Lab 1:** *Introduction to Unix* is an introduction to several new concepts and technologies, getting set up to do course-work and getting somewhat familiar with required or otherwise useful tools.
 
-- *Lab 2: Introduction to the C Programming Language* introduces system programming
+- **Lab 2:** *Introduction to the C Programming Language* introduces systems programming, using a compiler, and some very basic information about pointers and memory.
+  This lab is included so that students will have some familiarity with the syntax and the concepts when reading the course book\ @ostep.
+
+- **Lab 3:** *Introduction to Go Programming* is a short assignment meant to familiarise the students with the language that will be used for the rest of the assignments throughout the course.
+
+- **Lab 4:** *Scheduling and Metrics* lets students implement several simulated schedulers.
+  A FIFO scheduler is provided as an example, while the remaining schedulers (*Shortest Job First*, *Round Robin*, and *Stride Scheduling*) have to be implemented by the students themselves.
+  The schedulers are tested with simulated processes which are essentially structs with counters inside.
+  The processes do not perform any work.
+
+- **Lab 5:** *Memory Management* sees students implement analogues to functionality seen in a paged\ @wikipedia-paging Memory Management Unit (MMU), as well as OS functionality such as tracking free frames, updating the page-table, etc.
+  This assignment is also simulated.
+
+- **Lab 6:** *Concurrency and Parallelism* is more focused on general systems programming using threads and synchronisation primitives.
+  Students are introduced to several concurrency problems and how to solve them using different primitives, and where certain approaches are applicable.
+
+- **Lab 7:** *Introduction to Docker* introduces containers and communication between them.
+  It is a slight aside from the theme of the other assignments.
+
+The first three assignments are made available the summer before the course is held so that students have a chance to gain some knowledge before starting.
+
+Assignments four and five are about building OS components while six and seven are more centered around general systems programming.
 
 ### Motivation
 
-The general motivation for this effort is to provide assignments that better reflect the experience of developing an operating system.
+The general motivation for this effort is to provide assignments that better reflect the experience of developing a modern, multicore OS.
+Additionally, there is a desire to do this with a modern, high-level programming language that is simple enough that students can pick it up and be quickly productive.

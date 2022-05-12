@@ -1,14 +1,14 @@
 # Introduction
 
 Operating systems (\acrshort{os}) are ingrained in daily life, running at the core of handheld devices such as phones and tablets, laptops and desktop computers, or even on top of another OS such as virtual machines on cloud servers.
-The tiniest microcontrollers in a modern car are likely running some real-time operating system (\acrshort{rtos}).
+The tiniest microcontrollers in a modern car are likely running some real-time OS (\acrshort{rtos}).
 It is practically impossible to live modern life without interacting with an OS.
 We use these systems without much thought, however.
 Thanks to a series of clever abstractions, we think about the machine as a  tool for running applications and not a pile of copper and silicon.
 We do not think about how the mouse and keyboard are polled a thousand times each second, nor do we worry about how our favourite word processor processes this input.
 We use the devices.
 
-Those skilled in _The Art of Computer Programming_ @taocp can usually be oblivious to the machine's true inner workings.
+Those skilled in _The Art of Computer Programming_\ @taocp can usually be oblivious to the machine's true inner workings.
 The OS has abstracted the hardware so that the average programmer does not worry about machine code, address translation, virtualisation, etc.
 The programmer does not have to care about how system calls are different from regular functions.
 The system transparently handles the resulting trap exception.
@@ -22,15 +22,11 @@ However, we can take valuable knowledge from the design and implementation of OS
 Is it then possible to teach the concepts of OSs with theory and practice _without_ teaching all of computer architecture and building from the ground up?
 How early can this subject be introduced?
 
-In this thesis we present Gotos, a framework for teaching operating system concepts to undergraduate students using Go, a high-level and garbage-collected language.
+In this thesis we present Gotos, a framework for teaching OS concepts to undergraduate students using Go, a high-level and garbage-collected language.
 We present a multicore RISC-V emulator that executes user-space code, and the abstractions and interfaces that allow students to write their own OS components in Go.
-We also outline challenges that arise due to emulation or running with multiple cores, and propose some solutions to these challenges.
+We also outline new challenges that arise when
 
-Partially emulated instructional operating systems are not a new concept, but as far as is known to us, it is still a somewhat unexplored idea to expand the concept with multicore challenges and capabilities.
-
-The original goal was to provide both a solid framework for assignments *and* the assignments themselves.
-However, the project has grown to such a proportion that this was not realistic for a four to five-month project and we regrettably had to settle for only providing a very basic framework.
-Still, we are confident that our results show that a multicore implementation is indeed possible, albeit with special caveats.
+Partially emulated instructional OSes are not a new concept, but as far as we can tell, it is still a somewhat unexplored idea to expand the concept with multicore challenges and capabilities.
 
 ```{r child='01-background.Rmd'}
 ```

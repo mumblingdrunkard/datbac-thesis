@@ -167,14 +167,15 @@ We can make do with an atomic read of the `touched` list *after* atomically upda
 In this case, the above point is valid.
 This way we also don't block other cores from picking up threads of the process while `punmap` runs its course.
 
+Another pitfall is that we have to guarantee that the cores will *eventually* handle the poison pill, possibly complicating implementations.
+
 `punmap` looks to be a heavy operation (but less so than an IPI for each of the `touched` cores), so it should likely be avoided when implementing something like an allocator.
 Freed pages can instead be tracked internally and repurposed, instead of asking the operating system to unmap the page.
 
-The operating system itself might also track frames dedicated to the process, but not mapped by any page, reducing the cost of unmapping the page as the process will not corrupt other processes by writing to the unmapped page, thus avoiding the need for TLB invalidation on other cores.
-These might be frames that were previously mapped, but have since been unmapped.
+The operating system itself might also track frames dedicated to the process, but not mapped by any page, reducing the cost of unmapping the page, as the process will not corrupt other processes by writing to the unmapped page, thus avoiding the need for TLB invalidation on other cores.
+These might be frames which were previously mapped, but have since been unmapped.
 Saving unmapped frames for re-use is cheaper yet than poisoning all the touched cores.
-
-The core idea of all the improvements is re-use over re-allocation and is not a novel thought. @kudla2020
+The core idea of all the improvements is re-use over re-allocation and is not a novel thought\ @kudla2020.
 
 ## Conclusion
 

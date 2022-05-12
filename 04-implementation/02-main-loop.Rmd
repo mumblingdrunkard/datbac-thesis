@@ -3,14 +3,217 @@
 Most processors have a fetch-execute cycle, a general flow that instructions follow through the processor; our emulator is no different.
 Cores can be in three general states: *running*, *halted*, and *stopped*.
 
-### Core startup
+When a core is running, it is actively fetching and executing instructions.
+When a core is halted, it sleeps most of the time, waking up to periodically check interrupts.
+When a core is stopped, it has no associated goroutine and only exists as a struct.
+In the stopped state, a core can safely be started using `c.Start`.
 
-### Checking counters and interrupts
+### System setup
 
-### Instruction fetch decode and execute
+While the main contribution of this thesis is the multicore RISC-V-emulator, we will approach explaining the core execution loop starting from an implementation of the `System` interface.
+We do this because a core expects a `System` interface if it is to even operate.
+In listing\ \@ref(lst:minimal-system) we define a minimal system that fulfills the `cpu.System` interface.
+
+```{.go #lst:minimal-system caption="Our minimal system implementation."}
+// in package system
+type System struct {
+    core cpu.Core
+
+    // --- cpu.System interface ---
+    memory     cpu.Memory
+    rsets      cpu.ReservationSets
+    interrupts cpu.InterruptMatrix
+    wgAwake    sync.WaitGroup
+    wgRunning  sync.WaitGroup
+}
+
+// Methods for shared resources in cpu.System interface
+func (s *System) Memory() *cpu.Memory { return &s.memory }
+func (s *System) WgAwake() *sync.WaitGroup { return &s.wgAwake }
+func (s *System) WgRunning() *sync.WaitGroup { return &s.wgRunning }
+
+func (s *System) ReservationSets() *cpu.ReservationSets {
+    return &s.rsets
+}
+
+func (s *System) InterruptMatrix() *cpu.InterruptMatrix {
+    return &s.interrupts
+}
+
+// Methods for handlers in cpu.System interface
+func (s *System) HandleTrap(c *cpu.Core) { c.Halt() }
+func (s *System) HandleBoot(c *cpu.Core) { }
+```
+
+Some functions in this listing are unexplained such as `c.Halt()`; we explain these later.
+There are a few steps to creating a new system so we have created a function that streamlines the process for making a system with a single core in listing\ \@ref(lst:newsystem):
+This function is only an example of how it can be done.
+
+```{.go #lst:newsystem caption="Creating a new system."}
+// in package system
+func NewSystem() *System {
+    sys = &System {
+        memory: cpu.NewMemory(),
+        rsets:  cpu.NewReservationSets(),
+    }
+
+    sys.core = cpu.NewCore(0, sys)
+
+    return sys
+}
+```
+
+This function first creates a system with the required shared resources (the `sync.WaitGroup`s are created implicitly so we don't need to do it in the code), then we create a core with ID set to 0 and we pass the system we just created as the second argument.
+
+### System startup
+
+System startup is as simple as `s.Start()` which is implemented as shown in listing\ \@ref(lst:systemstart).
+
+```{.go #lst:systemstart caption="Creating a new system."}
+// in package system
+func (s *System) Start() {
+    s.core.Start()
+}
+```
+
+The function iterates over each core in the system and calls its `Start()` function.
+
+#### Core startup
+
+Core startup is slightly more complicated, but it starts with the simple function `c.Start()` as shown in listing\ \@ref(lst:corestart).
+
+```{.go #lst:corestart caption="Starting a single core."}
+// in package cpu
+func (c *Core) Start() {
+    c.system.WgAwake().Add(1)
+    c.system.WgRunning().Add(1)
+    go c.run()
+}
+```
+
+The function simply registers that this core is awake and running before it spawns a goroutine (lightweight thread) that does all the heavy lifting.
+
+`c.run()` is yet more complicated, shown in listing\ \@ref(lst:corerun).
+
+```{.go #lst:corerun caption="The main loop"}
+// in package cpu
+func (c *Core) run() {
+    // register that this core is no longer receiving interrupts
+    // when this function returns
+    defer c.system.WgAwake().Done()
+
+    // prevent the core running in multiple goroutines
+    c.bcm.Lock()
+    defer c.bcm.Unlock()
+
+    c.state = coreStateRunning
+    c.Boot()
+
+    for {
+        if c.state == coreStateStopping {
+            c.state = coreStateStopped
+            break
+        }
+        c.Step()
+    }
+}
+```
+
+#### Core boot: Boot()
+
+Before a core starts running any code at all, it runs the boot-handler.
+When returning from the boot-handler, the processor starts executing in user-mode.
+This is wrapped in the function `Boot()`, shown in listing\ \@ref(lst:boot).
+
+```{.go #lst:boot caption="The Boot function in Gotos"}
+// in package cpu
+func (c *Core) Boot() {
+    c.system.HandleBoot(c)
+    c.pc = c.csr[Csr_MEPC]
+}
+```
+
+The first line is obvious; it calls the boot-handler defined by the system.
+
+The second line assigns the value from the **\gls{mepc}** \acrshort{csr} to the program counter.
+This is done as a side-effect of the implicit `mret`-instruction that is executed when entering user-mode/leaving machine-mode (see section\ \@ref(arch:trap)).
+
+### Step()
+
+`Step()` is the main part of the execution-loop.
+It does a couple things:
+
+(1) if the core is sleeping; check external interrupts; sleep for a bit before returning; `Step()` does no more work in this case, then
+(1) check timers/counters (internal interrupts), then
+(1) check external interrupts, then
+(1) if all the above went without exceptions; load the instruction from memory; return if it fails, then
+(1) execute the instruction, and finally
+(1) update the program counter.
+
+#### Checking counters and interrupts
+
+In `Step()`, checking counters is implemented as in listing\ \@ref(lst:checkcounter).
+
+```{.go #lst:checkcounter caption="Checking counters inside Step()."}
+// in package cpu
+// inside function Step
+if c.counter.enable {                     // (1)
+    if c.counter.value == 0 {             // (2)
+        c.counter.enable = false          // (3)
+        c.trap(TrapMachineTimerInterrupt) // |-|
+        return                            // |-|
+    }
+    c.counter.value -= 1                  // (4)
+}
+```
+
+This does a few things: (1) check if the internal counter is active, and if so (2) check if the counter has reached 0, and if so (3) disable the counter, cause a trap with an appropriate exception code, and return, otherwise (4) simply decrement the value of the counter.
+
+Similarly, checking external interrupts is shown in listing\ \@ref(lst:stepcheckinterrupt).
+
+```{.go #lst:stepcheckinterrupt caption="Checking external interrupts inside Step()."}
+// cpu/core.go
+// inside function Step
+c.interruptCounter++
+if c.interruptCounter >= 100 {
+    c.interruptCounter = 0
+    if c.checkInterrupts() {
+        return
+    }
+}
+```
+
+A counter is associated with this process so that cores do not check external interrupts every cycle.
+The `checkInterrupts()` function is costly (see section\ \@ref(impl:ipi) and by only checking it every few cycles, we negate most of that cost.
+
+#### Instruction fetch, decode, and execute
+
+The final part of the `Step()` function is shown in listing\ \@ref(lst:stepexecute).
+
+```{.go #lst:stepexecute caption="Fetching and executing the instruction located at the address given by program counter."}
+// cpu/core.go
+// inside function Step
+success, inst := c.loadInstruction(c.pc)
+if !success {
+    return
+}
+
+c.execute(inst)
+
+if !c.jumped {
+    c.pc
+}
+```
+
+First, the `loadInstruction` does as it name says.
+It attempts to load an instruction from the possibly virtual address given by the program counter `c.pc`.
+If this loading fails, the function causes a trap and returns `false, 0`.
+Otherwise, if loading succeeds, it returns `true, <inst>`, where `inst` is a 32-bit unsigned integer that represents a RISC-V instruction.
 
 ### Traps
 
 ### Halting
 
-### Stopping
+### Stopping the system
+
+### System run

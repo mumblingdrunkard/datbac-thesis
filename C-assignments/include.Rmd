@@ -1,19 +1,18 @@
-# The assignments
+# The assignments {#ap:assignments}
 
-This chapter is a short overview and description of the proposed assignments.
-While we originally wanted to create a framework *and* fully featured assignments, we have decided that our limited time is better spent creating a more fully-featured framework which works, rather than focusing on complete assignments without a working framework.
+This appendix is a short overview and description of the proposed assignments, and includes short introductions to how they can be performed in Gotos.
+While we originally wanted to create a framework *and* fully featured assignments, we have decided that our limited time is better spent creating a framework which works, rather than focusing on complete assignments without a functioning framework.
 
 We believe that assignments are better created in collaboration with someone who has experience teaching the subject and the core code has had some more time to mature.
-
 
 ---
 
 **Note** that these assignments are only *proposed assignments*.
 Developing good assignments is an exercise in pedagogy which is much outside the scope of this project and thesis.
-However, the general progression of the assignments should be such that a fully working system is incrementally built, which we believe to be the case for the following proposals.
+However, the general progression of the assignments should be such that a fully working system is built incrementally, which we believe to be the case for the following proposals.
 
 We wish to provide a book that covers the A to Z of Gotos and contains in-depth explanations and many examples and exercises.
-A rough draft of the first few chapters can be found in appendix \@ref(ap:book).
+A rough draft of the first few chapters can be found in appendix\ \@ref(ap:book).
 
 ---
 
@@ -117,7 +116,7 @@ Because of the way interrupts are implemented, the main thread can interrupt the
 
 We envision this assignment as a final project for the course and it should touch everything covered in all the assignments.
 
-## Interlude - Threads and concurrency
+## Interlude - Threads and concurrency on a single core
 
 This assignment depends on assignment IV.
 With processes implemented, this assignment should cover how programs executing on top of Gotos can achieve correct concurrent execution accross threads using mutual exclusions or other means.
@@ -133,9 +132,11 @@ The goal of this assignment is to give students a peek into concurrent programmi
 One task we imagine to be useful is the implementation of a mutex with C and assembly.
 There are also several lock-free approaches to data-structures that can be useful to look at.
 
-## Advanced - Multicore I
+## Advanced - Multicore I: Adding cores
 
-***TODO*** describe this.
+
+
+## Advanced - Multicore II: The hard stuff
 
 ## Appendages
 

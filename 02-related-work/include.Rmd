@@ -2,24 +2,42 @@
 
 In this chapter we present previous, related, or inspiring works that have influenced the development of this project.
 
-- Nielsen et. al. 2019
-
-- Nachos
-
-- Xv6
-
 ## Nachos
 
-Nachos is an instructional OS
+Nachos (Not Another Completely Heuristic Operating System) is a framework/system for teaching OS concepts originally developed at UC Berkeley\ @nachos-report.
+It is centered around a user-mode MIPS\ @wikipedia-mips emulator and was originally written in C++\ @wikipedia-cpp *for* a MIPS architecture, though it has since been ported to other languages and platforms\ @nachos5j.
+
+The package also includes emulation for a storage device, an interrupt controller, and a few other miscellaneous devices.
+While the system supports programs running multiple threads, execution of MIPS instructions happens on a single OS-thread.
+I.e. there is a single core (concurrency vs parallelism).
+Other devices can run on other host OS threads.
+A version of Nachos was supposedly previously used at UiS\ [@nielsen2019, page 11].
+
+Further development of the original Nachos project was halted in 1996, and its latest version, 4.0, has been in a perpetual beta-release since\ @wikipedia-nachos.
+C++ was officially standardised in 1998 and the 2011 standard brought about large improvements to how modern code is written\ @wikipedia-cpp.
+Because of this, Nachos can be considered outdated.
+
 
 ## Xv6 {#sec:02-xv6}
 
-Xv6 is a popular teaching OS, developed at MIT
+Xv6 is a popular teaching OS, developed at MIT\ @xv6.
+It is a re-implementation of Unix Version 6\ @wikipedia-unix-v6, but implemented for modern processors using ANSI C (which was standardised more than a decade after the release of Unix v6\ @wikipedia-ansi-c).
+Originally built for x86, it has since been ported to RISC-V\ @rv5vol1, and the original version for x86 is no longer maintained.
 
-## Nielsen et al. 2019 -- Biscuit
+Unlike Nachos, Xv6 is a full OS.
+Both user-mode and kernel-mode code compile to native instructions.
 
-An earlier bachelor's project from 2019 looked into using Biscuit -- a research OS written with Go and assembly -- as a base to teach OS concepts.
-The goal was to be able to use Go to write OS components through a series of lab-assignments.
-Go, having garbage collection and a strong standard library, is easier for new students than a language like C or C++ as used in Xv6 or Nachos.
+Though it can execute directly on real hardware, the most common method for using Xv6 seems to be to run it atop an emulator such as QEMU\ [@qemu; @github-xv6].
 
-Biscuit is not written to be an intstructional operating system, and from all the challenges faced, it was found to be unsuitable for use in the class.
+## Nielsen et al. 2019
+
+An earlier bachelor's project at UiS from 2019 looked into using Biscuit\ @cutler2019 -- a research OS written with Go and assembly -- as a base to teach OS concepts\ @nielsen2019.
+
+The goal was to be able to use Go in the OS class at UiS, with the idea that Go, having garbage collection, simple syntax, and a strong standard library, would be easier for new students than a language like C or C++ as used in Xv6 or Nachos.
+
+Biscuit is not written to be an intstructional OS, and from all the challenges faced, it was found to be unsuitable for use in the class.
+Instead, the effort produced a series of lab-assignments where OS components are individually simulated and the students "fill in the blanks" for critical functions.
+The simulated components/mechanisms touch topics like memory management (free-frame management), and scheduling.
+
+Before this work, labs appear to have been more focused around systems programming concepts such as networking and concurrency.
+While the concurrency labs are preserved, the networking lab seems to have been replaced by the aforementioned simulation labs.

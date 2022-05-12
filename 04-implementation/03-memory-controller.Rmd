@@ -1,7 +1,7 @@
 ## Memory controller
 
 The memory controller manages access to memory.
-Figure \@ref(fig:04-core) shows that the memory controller controls the caches and the TLB.
+Figure\ \@ref(fig:04-core) shows that the memory controller controls the caches and the TLB.
 
 ### Cache
 
@@ -14,6 +14,6 @@ The custom hash-map performs significantly better than Go's own `map` type with 
 This might lead to excessive invalidation if processes have unexpected access patterns.
 However, for "normal" usage -- where spatial and temporal locality applies -- cache performance should be more than adequate.
 
-### TLB
+### TLB {#impl:tlb}
 
 A similar hash-map implementation is used for the TLB as for the caches, though it has a separately configurable probe-depth and size.

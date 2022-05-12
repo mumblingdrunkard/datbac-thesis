@@ -9,14 +9,18 @@ While the multicore architecture should be capable enough to demonstrate simple 
 ### Caching and TLBs
 
 Multicore architectures require synchronisation when accessing shared resources such as RAM.
-The first step to creating this multicore architecture is to add mutexes to resources that may be accessed in the execute-cycle.
+The first step to creating this multicore architecture is to add mutexes to resources that may be accessed in the fetch-execute-cycle.
 There are only two such resources in Gotos: `Memory` and `ReservationSets`.
+
 All access to these resources should only happen if the lock is held.
-This is an issue as there is at least one read from memory in each cycle when reading the instruction.
+This is an issue, as there is at least one read from memory in each cycle when reading the instruction.
 There will often be additional memory accesses; RISC-V is a load/store architecture and instructions will regularly perform additional reads or writes.
-The problem compounds further when address translation is added, usually requiring two reads from the page table.
-These two reads from the page table are doubled since they are performed for both the instruction address and the source or destination address of an executed instruction.
-The following list presents a worst case scenario where a two-level page table is used and an atomic instruction is fetched and executed.
+
+#### Why?
+
+The problem compounds further when address translation is added, usually requiring two reads from the page table per translation.
+These two reads from the page table are further multiplied since they are performed for both the instruction address and the source or destination address of an executed instruction.
+The following list presents a worst case scenario where a two-level page table is in use and an atomic instruction is fetched and executed.
 
 1. fetch instruction
     1. translate instruction address (2)
@@ -26,15 +30,18 @@ The following list presents a worst case scenario where a two-level page table i
     1. read data from source address (1)
     1. write result back to source address (1)
 
-These frequent accesses to memory cause a locked, shared memory to become very inefficient.
-One way to solve this is to lock the memory for the entire duration of executing an instruction, though this quickly becomes inefficient and cores will just run in lockstep; thus it is not a valid solution.
+The numbers in the parentheses indicate how many memory accesses are required for each step.
+For an atomic instruction, the total number of memory accesses is seven, a high number if memory needs to be locked and unlocked on each access.
+The last two steps in the above list *will* require interaction with shared resources, but the other five memory accesses can, in theory, be performed on a private cache.
 
-To counter these inefficiencies, real systems use caches and translation lookaside buffers (TLBs, a form of translation cache).
+#### How?
+
+To counter these inefficiencies, real systems use caches (for data and instructions) and translation lookaside buffers (TLBs, a form of translation cache) (for translations).
+
 The RISC-V processor accompanying Gotos uses two caches and a single TLB.
-All Gotos' caches use physical addressing, meaning they will not always require invalidation on context-switching (though they usually always require writing back, at least for multi-core architecture).
+All Gotos' caches use physical addressing, meaning they will not always require invalidation on context-switching.
 Real systems would likely use virtually-indexed-physically-tagged caches so that parallel lookup can be performed while address translation is in flight.
-In the emulated processor, parallel lookup is not really an option and so a physically addressed cache gives the least friction in implementation.
-The TLB holds recently used translations in a map-like structure and is checked before deciding whether a page-table walk is required.
+In the emulated processor, parallel lookup is not really an option and so a physically addressed cache gives the least friction in implementation and is immune to aliasing (where two virtual addresses map to the same physical address).
 
 #### The instruction cache
 
@@ -53,11 +60,11 @@ The data cache may be invalidated and written back by a `fence` instruction.
 
 Because the Sv32 format allows any entry in the page-table to be a leaf-page, it allows for two different page sizes.
 Usually, efficient systems would keep two TLBs, one for each size, and perform lookup in parallel.
-In software, however, options for parallel lookup are limited or impossible and the best way is to check each TLB in sequence.
+In software, however, options for parallel lookup are limited or impossible and the best approach is to check each TLB in sequence.
 We imagine most TLB access in Gotos will be to normally sized pages, causing most lookups on superpages to be unsuccessful, wasting cycles.
 To side-step this issue, a superpage translation is treated as multiple smaller pages in Gotos.
 
-This approach lets us utilise just a single TLB and improves translation speed in the normal case when pages have the default size of 4096 bytes.
+This approach lets us utilise a single TLB and improves translation speed in the normal case when pages have the default size of 4096 bytes.
 The disadvantage of this approach is that a single superpage splits into 1024 normal pages, potentially causing space in the TLB to be wasted.
 
 It may be beneficial to add a second TLB to distinguish instruction and data in the translation pipeline.
@@ -65,9 +72,9 @@ The danger with a single TLB is that data and instructions are placed at unfortu
 
 ---
 
-Adequate testing has not been done to quantify the performance impact of a single TLB versus multiple TLBs.
-With our limited testing of small programs, it has not yet become an issue.
-It should be simple to add a second TLB if it proves to be useful.
+> Adequate testing has not been done to quantify the performance impact of a single TLB versus multiple TLBs.
+> With our limited testing of small programs, it has not yet become an issue.
+> It should be simple to add a second TLB if it proves to be useful.
 
 ---
 
@@ -84,18 +91,18 @@ We provide a short summary of the issue; T1 and T2 are threads of a process runn
 Being threads of the same process, they share the same virtual address space and therefore the same page-table.
 
 (a) If T1 allocates/maps a new part of the address space and passes a reference of the newly allocated memory to T2; T2 might fault on the next access to that memory as it may be using a cached version of the page-table to determine permissions.
-    The RISC-V specification allows caching page-table entries whose *valid*-bit is clear. [@rv5vol2, page 78]
+    The RISC-V specification allows caching page-table entries whose *valid*-bit is clear\ [@rv5vol2, page 78].
     B will raise a trap and our trap-handler can see that there is nothing wrong with the uncached version of the page table; we flush cache and retry the instruction.
     **This is fine!**
 
-(b) Now, T1 unmaps the page and our operating system marks the corresponding frame as free to use for other purposes.
+(b) Now, T1 unmaps the page and our OS marks the corresponding frame as free to use for other purposes.
     Then T2 -- still executing -- attempts to write some data to the memory.
     In its cache, B finds that the reference is valid and it successfully writes to memory, even though that frame is marked as unused.
     A and B are executing the same process, but the address space is unsynchronised.
     **This must not happen!**
 
 This issue is solved by explicitly synchronising caches across cores.
-RISC-V proposes doing this by using interprocessor interrupts. [@rv5vol2, section 4.2.1]
+RISC-V proposes doing this by using interprocessor interrupts\ [@rv5vol2, section 4.2.1].
 To solve the issue, A can raise an interrupt on core B.
 B then executes a handler that flushes its translation caches before signalling A that it is finished.
 After this, A can mark the frame as free and be certain that T2 will not execute a successful load/store/fetch to/from the frame.
@@ -139,16 +146,16 @@ Interprocessor interrupts and interprocessor communication in general is a funda
 
 ---
 
-> For these reasons, we recommend system implementations to use the *giant lock* technique as often as possible to reduce complexity. @wikipedia-bkl
+> For these reasons, we recommend system implementations to use the *giant lock* technique as often as possible to reduce complexity\ @wikipedia-bkl.
 > A single mutex can be used to wrap most or all system trap handlers where access to shared system resources *other than* `Memory` and `ReservationSets` occurs.
 >
 > `Memory` and `ReservationSets` should never wrap another mutex outside the `cpu` package, nor does it ever make sense for them to do so.
-> It is likely best that they are never accessed in "raw" form as `cpu` exposes functions to update these in a correct manner, and the fact that these system resources are exposed is an unfortunate side-effect of the system abstraction in use.
+> It is likely best that they are never accessed in "raw" form; `cpu` exposes functions to update these in a correct manner, and the fact that these resources (`Memory` and `ReservationSets`) are available, is an unfortunate side-effect of the system abstraction in use.
 >
 > It should also be highlighted that not every trap handler would require locking, and interrupt-handlers especially should likely never attempt to acquire a lock.
 >
 > On the whole, we recommend users steer away from IPIs entirely in Gotos and instead use other techniques and mechanisms to ensure consistency.
 > IPIs are included only to provide an analog to real processors, but will usually not be the optimal solution in Gotos for performance or ease of use.
-> An alternative method for unmapping memory safely -- which avoids TLB-shootdowns in most cases -- is outlined in appendix \@ref(ap:shootdown-alternative).
+> An alternative method for unmapping memory safely -- which avoids TLB-shootdowns in most cases -- is outlined in appendix\ \@ref(ap:shootdown-alternative).
 
 ---

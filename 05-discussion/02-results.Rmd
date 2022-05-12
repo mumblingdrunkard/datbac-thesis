@@ -1,0 +1,107 @@
+## Results
+
+We would like to briefly discuss the results of our work.
+
+### The code
+
+Most of the code exists in the `cpu` package and consists of around 3500 source lines of code (SLoC), and around 550 lines of comments, across 22 files (found by running `cloc` within the appropriate directories).
+
+Some of the provided skeleton-code exists in the `system` package and makes up a few hundred lines of code.
+
+### Performance
+
+In the best of circumstances, -- with address translation disabled, IPIs disabled, no preemption,  -- cores are able to execute around 65 million instructions per second (mips) on an Intel Core i7 1065G7.
+This number decreases when additional features are added.
+Performance penalties are approximately as follows:
+
+- 20% for address translation, and
+- 15% for enabling IPIs (checked every cycle) and approximately 5% for each added core.
+
+These are the largest performance penalties because of how they affect the fetch-execute cycle.
+Address translation requires lookup in a map, and IPIs require atomic loads to occur on every cycle.
+After enabling both, we are still left with adequate performance to do useful work and run realistic example programs.
+
+However, if performance is not to our liking, we mitigate most of the performance penalty of IPIs by only checking them every 100 cycles.
+This ensures that IPIs can still be received within microseconds and reduces the frequent atomic loads to a frequently accessed local counter and infrequent loads and stores.
+We have applied this mitigation by default.
+
+The overhead of address translation is difficult to negate, but we accept it as necessary.
+Improvements to the TLB implementation (See section\ \@ref(impl:tlb)) might significantly lower the impact of enabling address translation.
+
+With all features enabled and mitigation applied, the emulator is able to execute at close to 50 million instructions per second, if not more.
+We find this to be adequate for any purpose that Gotos can be useful for and leaves enough margin to add other performance-degrading features without much worry.
+
+#### Single-core vs multicore performance
+
+Throughout the development of this project, we have been careful to always verify that multiple cores indeed perform better than a single core when it comes to multi-threaded workloads or running several processes at once.
+This requires some careful organisation of the `Core` struct, as sub-optimal ordering of fields one time lead to multiple emulated cores being *slower* than having a single core handle all the workloads.
+
+We hypothesise that this is down to caches and struct alignment in Go.
+Some compilers for some languages will re-order struct fields to optimise for space or speed, or both.
+To our knowledge, Go does not do this, but we cannot se any reason why it shouldn't.
+As far we know, Go does not currently have any guarantees about memory ordering of structs.
+
+The test we used most commonly for verifying adequate multicore performance, was to create four equal, long-running processes, then executing them on a `System` with a single core, compared to one with multiple cores.
+The results are shown in listings\ \@ref(lst:scperf), and\ \@ref(lst:mcperf).
+
+```{.txt #lst:scperf caption="Four long-running processes (125M instructions each) executing on a single core." numbers=none frame=none}
+> time go run main.go
+[core 0]: Process 0 exited with value 0x0035C7E2 = 3524578
+[core 0]: Process 1 exited with value 0x0035C7E2 = 3524578
+[core 0]: Process 2 exited with value 0x0035C7E2 = 3524578
+[core 0]: Process 3 exited with value 0x0035C7E2 = 3524578
+[core 0]: No more pcb's in queue!
+[core 0]: Machine External Interrupt - code 1, by 4
+
+go run main.go  9.26s user 0.07s system 100% cpu 9.253 total
+```
+
+With a single core, execution takes ~9 seconds to complete.
+
+```{.txt #lst:mcperf caption="Those same processes, but with one core for each process" numbers=none frame=none}
+> time go run main.go
+[core 0]: Process 0 exited with value 0x0035C7E2 = 3524578
+[core 0]: No more pcb's in queue!
+[core 1]: Process 2 exited with value 0x0035C7E2 = 3524578
+[core 1]: No more pcb's in queue!
+[core 3]: Process 1 exited with value 0x0035C7E2 = 3524578
+[core 3]: No more pcb's in queue!
+[core 2]: Process 3 exited with value 0x0035C7E2 = 3524578
+[core 2]: No more pcb's in queue!
+[core 0]: Machine External Interrupt - code 1, by 4
+[core 3]: Machine External Interrupt - code 1, by 4
+[core 1]: Machine External Interrupt - code 1, by 4
+[core 2]: Machine External Interrupt - code 1, by 4
+
+go run main.go  11.11s user 0.08s system 377% cpu 2.964 total
+```
+
+With 4 cores active on the other hand, the same queue of processes is completed in just ~3 seconds.
+The efficacy of this test is of course dependant on the number of physical cores in the system and how many OS-threads Go is allowed to create\ @go-runtime.
+This test was run on a system with four cores.
+Address translation is enabled for this test.
+Scheduling is disabled.
+With address translation disabled, we expect a slight decrease in running times.
+
+Note the loss in efficiency when moving to multiple cores.
+Where one core completed all tasks in $9.25$ seconds, we would expect four cores to complete in $9.25/4 = `r 9.25/4`$\ seconds; instead we see decreased efficiency.
+
+### Code quality
+
+While we are satisfied with the core functionality provided, and the modularity is adequate for our purposes, foresight tells us that more modularity is desired within the `cpu` package.
+
+As mentioned in section\ \@ref(sec:assignment-iii), we could add a `Translator` interface for easily switching the memory virtualisation method used.
+Additionally, we could add a `Cacher` interface to modularise cache implementations.
+
+However, for such core functionality, the pointer-chasing that ensues from generalising to interfaces might come with a penalty to performance.
+This requires more work and testing to decide implementation method.
+`Memory`, `ReservationSets`, and `Translator` may be appropriately converted to interfaces as they are generally cached or rarely used.
+However, if IO is added *behind* a `Memory` interface (i.e. MMIO), it may be beneficial to keep Memory as a non-interface object to prevent pointer-chasing on every access when IO is mapped to a process.
+
+The code is still quite "researchy" -- for lack of a better adjective -- and could do with review by more people, some rewriting, and proper documentation before it is ready for real-world usage.
+
+Despite these points, we have tried to follow practices that we believe to be generally sound, such as:
+
+- panic as early as possible on API misuse,
+- aliased types to prevent said API misuse, and
+- descriptive names.

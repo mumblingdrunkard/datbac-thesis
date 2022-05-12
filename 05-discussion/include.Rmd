@@ -10,6 +10,3 @@ This chapter is reserved for more subjective discussion of thoughts and ideas an
 
 ```{r child='03-future-work.Rmd'}
 ```
-
-```{r child='04-separate-courses.Rmd'}
-```

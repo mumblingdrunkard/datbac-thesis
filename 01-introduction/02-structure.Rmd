@@ -1,13 +1,15 @@
 ## Thesis structure
 
-The next chapter covers previous, relevant work that has been done concerning the DAT320 course and other teaching operating systems.
+The next chapter covers previous, relevant work that has been done concerning the DAT320 course and other teaching OSes.
 
 In the proceeding two chapters we describe the architecture and implementation as well as challenges faced.
 These mainly concern the architecture and implementation of the processor emulator, but we also highligt areas where system implementations should be careful.
 
-We propose a set of assignments that use Gotos in the fifth chapter, and how these can fit into the current curriculum as well as how we might extend the assignments into a second or even third OS course.
-
 The rest of the thesis is dedicated to reflection and conclusion.
+
+Several appendices are provided with relevant information.
+The threshold for moving something into an appendix as opposed to keeping it in the main body of the thesis is slightly arbitrary.
+Most small chunks are written as below:
 
 ---
 
@@ -19,3 +21,6 @@ The rest of the thesis is dedicated to reflection and conclusion.
 > When larger recommendations, opinions, and experiences are recounted, we try to section them off and make it clear that this is a break of the normal flow of information, like these three paragraphs.
 
 ---
+
+But for very large chunks, or those chunks that stand much on their own, we may resort to using an appendix.
+The "tone" of the appendices may vary, but they are generally less formal than the main thesis.

@@ -1,0 +1,11 @@
+# Gotos companion book {#ap:book}
+
+What follows is a rough draft of the first few chapters of a possible companion book that is intended to guide students through much of the assignments.
+These chapters should line up with the proposed first assignment.
+We are intentionally light on theory and quickly get into practical application.
+
+We want this book to make it easy for course coordinators to choose Gotos as a platform for their course.
+
+We would like to have this book be developed further before this thesis is published, but it falls too far out of the scope of the project for us to give it much priority.
+
+\includepdf[pages=-]{`r normalizePath('book.pdf')`}

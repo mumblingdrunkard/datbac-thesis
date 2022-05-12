@@ -1,0 +1,136 @@
+## Future work
+
+There are multiple improvements to be done for this project and many features to be added before any real adoption can occur, but we believe that Gotos has a real potential to be an extensible and user-friendly platform for teaching modern OS concepts.
+
+### Rewrite and document
+
+As mentioned, the code carries distinct signs of being a research-and-development-project.
+
+We believe that before any more work is done, the knowledge gained should be used to methodically rewrite large parts of the core project and properly document everything in the process.
+This should make it easier for developers to dive into the source code to discover bugs, suggest improvements, or simply to understand the API better.
+
+### Compressed instructions
+
+The emulator can be expanded to support the *C*-extension of the RISC-V specification\ [@rv5vol1, chapter 16].
+
+### ELF loader
+
+As discussed in appendix\ \@ref{ap:user-space}, Gotos currently expects raw binary files that contain nothing but instructions, and it expects to load them at address (possibly virtual) `0x4000` and start executing from there.
+Most code that is loaded is position-independent\ @wikipedia-pie, so this is generally not an issue.
+
+However -- for larger applications, applications that do linking (including compiled code from other binaries at runtime), or applications that include segments other than `.text` or `.data` -- we may want to include an ELF loader that can properly load executable files from the produced ELF and place segments where they need to be.
+Perhaps this could even be done in an assignment.
+
+### Niceties
+
+There are several niceties to be provided that can ease further development, or the experience of using Gotos when learning.
+
+One such nicety is to have the virtualised memory address space of a process be accessible to the system.
+This is actually not generally available as a feature in RISC-V; a system in kernel-mode wanting access to the virtual address space of a process must manually map said part to its own page-table (if running in supervisor mode), or manually translate each access using the process' page-table (if running in machine mode).
+Gotos does not have a "supervisor" mode; all kernel-mode processing happens in something that equates to machine-mode.
+
+Because of the unique position that partial emulation puts us in, we can provide a function in `cpu` like `core.Read` which will return a slice of bytes read from the virtualised address space.
+Similarly, we can provide `core.Write` to do the same thing when a system has to write data to the virtualised address space of a process.
+
+---
+
+> **About mapping process memory to supervisor memory:**
+> While not directly relevant to Gotos, we would still like to include this information here.
+>
+> Because the **satp** register is still considered active in supervisor mode, we can map part of the address space of a process *P* to the address space available to a supervisor *S*, using the following technique:
+>
+> For a given 32-bit address *A* from the process *P*, get the highest level PTE that subsumes the given address.
+> This PTE is located at `P.pt_root + 4(A >> 22)` (`P.pt_root` being the root of the process' page table).
+> Copy this PTE into a reserved slot at the highest level in the supervisor's page-table; for the sake of simplicity, we say this slot is located at the end of this address space, so that the PTE is located at `S.pt_root + 4 * 1023`.
+> Issue a `sfence.vma` to ensure we have properly synchronised the supervisor's page-table.
+>
+> We can now access *A* as `A | 0xFFC00000` (the address *A*, but with the top 10 bits set).
+> If we access addresses past the range of the PTE, we have to re-map, or make additional mappings.
+> The valid range of addresses (from the supervisor's perspective) is [`0xFFC00000`, `0xFFFFFFFF`] (the range of the PTE we mapped *to*).
+>
+> With this technique, a supervisor *S* can access the address-space of *P* without manually translating every access.
+>
+> Gotos does not implement supervisor-mode, though it might in the future.
+> If so, we might use this exact method of partially mapping address spaces, then access memory *as if* accessing raw physical memory.
+
+---
+
+### Modularise core functionality
+
+There are several opportunities for providing modularity in the `cpu` package.
+Modularity could add multiple benefits:
+
+- We can add "debug hooks" for functions to do logging or track certain metrics.
+  This functionality should likely sit behind a `debugHooksEnable` configuration flag as it might severely impact performance.
+  Still, there is much performance left and we should not be too afraid of slightly reducing it if it leads to better code quality and easier development and testing.
+
+- Similarly, we can add hooks for things such as testing.
+  These hooks could be considered "probe points" where the processor can be inspected for state, and perhaps even modified.
+  This could simplify automatic testing for student-submitted code, as we could expose one implementation of an interface when students are developing, then use a secret implementation in testing.
+
+Being able to easily swap certain functionality for others is a powerful concept and improves development, testing, debugging (for Gotos developers, and for students), and more.
+
+### Interrupt controller
+
+The implementation of interrupts -- though adequate for the current assignments -- could use some work.
+Current implementation uses what can rightly be called "special purpose" interfaces.
+An interrupt controller would serve as a more general interface and could make use of the intended control status registers\ [@rv5vol2, section 3.1.9] to signal interrupts in a way that is closer to reality.
+
+With this, other devices can also signal interrupts for asynchronous IO.
+
+### Compliant floating-point numbers
+
+Although a very minor detail, it would be nice to have a fully compliant implementation from the application/user-mode perspective.
+The current implementation is built for speed and simplicity and does not fully comply with the RISC-V specification for how floating-point numbers should behave.
+
+Go has `math/big` which contains most of the functionality required, such as rounding modes, adjustable accuracy, etc.
+It should be possible to create a fully compliant solution, although it is guaranteed to be much slower than current implementation.
+
+### Extensive testing and benchmarking
+
+All parts of Gotos should be double and triple-checked against the relevant specifications and adequate tests should be written to enable rapid development without fear of introducing subtle bugs.
+
+### MMIO and other devices
+
+Current implementation has no memory mapped IO and the IO architecture is simplistic (practically non-existent).
+We believe it is possible to wrap `Memory` in a way that allows a system to define a full composition of memory-mapped devices such as UART, a frame-buffer, and much-much more.
+
+Because these devices would share the address space with normal memory, they could be mapped directly to user-space processes which both improves performance, and extends the capabilities of the system.
+This is similar to the point about generally modular code.
+
+Before this can happen though, physical memory protection (PMP) and physical memory attributes (PMA) (see section\ \@ref(sec:mem-virt)) should be supported and the memory controller should be improved to take these features into account when deciding whether or not to cache accesses or allow them at all.
+
+Note that an implementation of this has to properly account for atomics (See section \@ref(arch:atomics)) because reservations must be invalidated when "... a store is made to the reserved region by an external device".
+
+### Nicer visualisation and debugging
+
+A visualiser would be a nice quality-of-life improvement, especially when stepping through programs.
+The best alternative that is currently available is `StepAndDump` which is best used with only one core, and integrates poorly with the terminal, easily flooding it with printouts.
+
+The debugging experience can also be much improved with functions like `StepBack` and the likes, allowing us to step backwards and replay certain events.
+Building this as a naive collection of old copies of the system is possible, though very wasteful.
+
+All this should be wrapped in a nice command-line interface or perhaps even a graphical interface.
+
+This might be suitable as a bachelor's or master's project.
+
+### Properly defined system
+
+An advantage of Gotos is that it is bare-bones so that most anything can be built with it.
+A disadvantage of Gotos is that it is bare-bones so that most everything has to be built for it to work.
+
+Our approach to developing Gotos presents both strengths and weaknesses.
+However, we believe that we can properly define the system interface to provide better interoperability, while still keeping the bare-bones, "from scratch" experience of building an operating system using Gotos.
+
+This process would involve much experimentation as well as input from experts of the field; with the goal of crafting a specification that is flexible and extensible, yet still provides a target for how a system is expected to behave.
+
+A properly defined system interface would allow development of a C standard library, which we expect could cut down on the effort required to integrate Gotos into more advanced OS development courses.
+
+It should be possible to also provide a bare-bones system which conforms to these specifications as is done in Nachos\ @nachos-report.
+However, we believe that starting from the most basic level, and only providing helpful components when necessary is a better approach to utilising Gotos.
+
+### Better lab-assignments
+
+As already mentioned, assignments have not been a large focus for this project.
+We recommend assignments follow a progression such that a working system is incrementally built from very basic components.
+In appendix \@ref(ap:assignments), we have provided a general outline of what assignments in an OS-course might look like.
