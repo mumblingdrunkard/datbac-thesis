@@ -166,7 +166,7 @@ $if(listings)$
         \ttfamily
         \lst@ifdisplaystyle\footnotesize\fi}
 \lstset{showstringspaces=false}
-\lstset{float=h}
+%\lstset{float=h}
 $endif$
 $if(highlighting-macros)$
 $highlighting-macros$
@@ -392,7 +392,7 @@ $endfor$
 
 \makeglossaries
 
-\setlength{\parskip}{6pt}
+\setlength{\parskip}{3pt}
 \setlength{\parindent}{16pt}
 \setlength{\floatsep}{6pt}
 \setlength{\textfloatsep}{6pt}
