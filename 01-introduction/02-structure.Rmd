@@ -16,7 +16,7 @@ Most small chunks are written as below:
 > We may frequently opine in the technical chapters if it is locally relevant.
 >
 > We do so in an effort to avoid excessive cross-referencing and to provide context where it is relevant instead of delaying it to the reflection.
-> It should still be noted that these opinions are far from objective fact and we do not proclaim to be experts of the topics presented in this thesis.
+> It should still be noted that these opinions are far from objective fact and we do not proclaim to be experts in the topics presented in this thesis.
 >
 > When larger recommendations, opinions, and experiences are recounted, we try to section them off and make it clear that this is a break of the normal flow of information, like these three paragraphs.
 

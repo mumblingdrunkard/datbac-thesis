@@ -294,7 +294,7 @@ $endif$
 % \titlespacing*{\chapter}{0pt}{0pt}{10pt}
 
 % for code block captions
-\usepackage{caption}
+\usepackage[width=0.7\textwidth]{caption}
 \usepackage{floatrow}
 
 \DeclareNewFloatType{chunk}{placement=H, fileext=chk, name=}
@@ -392,8 +392,8 @@ $endfor$
 
 \makeglossaries
 
-\setlength{\parskip}{3pt}
-\setlength{\parindent}{16pt}
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{6pt}
 \setlength{\floatsep}{6pt}
 \setlength{\textfloatsep}{6pt}
 \setlength{\intextsep}{6pt}

@@ -134,3 +134,5 @@ However, we believe that starting from the most basic level, and only providing 
 As already mentioned, assignments have not been a large focus for this project.
 We recommend assignments follow a progression such that a working system is incrementally built from very basic components.
 In appendix \@ref(ap:assignments), we have provided a general outline of what assignments in an OS-course might look like.
+
+The actual construction of assignments should probably be done in collaboration with someone who has experience teaching.

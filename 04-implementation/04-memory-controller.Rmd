@@ -1,0 +1,87 @@
+## Memory controller {#impl:mc}
+
+The memory controller manages access to memory.
+Figure\ \@ref(fig:04-core) shows that the memory controller controls the caches and the TLB.
+
+### Load and store
+
+### Cache
+
+All caches are implemented as fixed-size hash-maps with quadratic probing and a limited probing depth.
+Hashing is naively implemented as a modulo of the indexing value.
+This means that for each cache-line, there is a limited number of slots where it can be stored.
+If all candidate slots are occupied when a cache-line needs to be stored, they are flushed back to main memory (if dirty), invalidated, and the new cache-line is loaded at the first of the candidate slots.
+
+The structs used for caches are very simple, shown in listing\ \@ref(lst:cachestruct).
+
+```{.go #lst:cachestruct caption="The cache structs in use."}
+// cpu/cache.go
+type cacheLine struct {
+    number uint32
+    flags  uint8
+    data   [cacheLineLength]uint8
+}
+
+type cache struct {
+    lines [cacheLineCount]cacheLine
+}
+```
+
+---
+
+The custom hash-map performs significantly better than Go's own `map` type with the disadvantage that the number of entries is limited and there are only a certain number of slots available for each item (depending on the probe depth).
+This might lead to excessive invalidation if processes have unexpected access patterns.
+However, for "normal" usage -- where spatial and temporal locality applies -- cache performance should be more than adequate.
+
+---
+
+An abbreviated version of the cache `load` function is shown in listing\ \@ref(lst:cacheload).
+
+```{.go #lst:cacheload caption="Loading values from cache."}
+// cpu/cache.go
+func (c *cache) load(address, width uint32) (bool, uint64) {
+    if address&(width-1) != 0 {
+        panic("misaligned access to cache")
+    }
+
+    lineNumber := address >> cacheLineOffsetBits
+    offset := address & cacheLineOffsetMask
+
+    for i := uint32(0); i< cacheProbeDepth; i++ {
+        try := (lineNumber + i*i) % cacheLineCount
+        if c.lines[try].number == lineNumber {
+            if c.lines[try].flags&cacheFlagStale != 0 {
+                return false, 0
+            }
+
+            switch width {
+            case 4:
+                return true, uint64(
+                    binary.LittleEndian.Uint32(
+                        c.lines[try].data[offset : offset+4]))
+            // ... other cases
+            default:
+                panic("invalid load width")
+            }
+        }
+    }
+    return false, 0
+}
+```
+
+This function does a couple things: (0) verify that loading is aligned, (1) calculate the cache-line number that subsumes the address, (2) calculate the offset into the cache-line, (3) probe the cache until a matching entry is found or the probe depth is exceeded.
+
+In the case that no matching entry is found, or the entry is found, but it is stale, return `false, 0`.
+Otherwise, return `true, v` where `v` is a 64-bit unsigned integer and the desired value is right-aligned in `v`.
+
+There are functions for writing to cache, and for replacing cache-lines when they are not present or they are stale.
+It is up to the caller to bring data into and out from cache.
+Functions for invalidation and writeback are also available.
+
+### Translate
+
+### TLB {#impl:tlb}
+
+A similar hash-map implementation is used for the TLB as for the caches, though it has a separately configurable probe-depth and size.
+Lookup is performed on the **vpi**, the *virtual private index* which is a combination of the virtual page number and the address-space identifier (ASID) of the current process.
+This means that the TLB can hold entries for the same virtual address for several processes.

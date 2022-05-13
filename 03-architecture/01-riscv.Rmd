@@ -9,7 +9,7 @@ For these reasons, we omit multiple details of the RISC-V specification, opting 
 In this section we provide a description of the relevant parts of the RISC-V specification and where Gotos adheres or diverges from this, along with some justifications for the divergence.
 We also describe briefly the different components that have been used to achieve the goal of efficient multicore execution.
 
-### The RISC-V instruction set architecture (ISA)
+### The RISC-V instruction set architecture (ISA) {#arch:isa}
 
 Gotos uses a user-mode RISC-V emulator for processes running on the system.
 This is similiar to Nachos' MIPS emulator\ @nachos-report.
@@ -26,7 +26,7 @@ It also specifies several extensions that add capabilities such as floating-poin
 The G extension is a collective extension used to refer to the IMAFDZicsr Zifencei extensions all together.
 Intended as a reasonable target for applications running on modern systems:
 
-- I, the base RISC-V instruction set of 40 instructions.
+- I, the base RISC-V instruction set of 40 instructions, contains the bare minimum for many applications such as addition and subtraction, and control-flow instructions.
 - M, extension for multiplication and division.
 - A, extension for atomic operations.
 - F, extension for single precision floating-point arithmetic (disabled by default).
@@ -51,6 +51,24 @@ This register file is required for the OS to properly work.
 The Zicsr is specifically about user-mode support for csr interaction.
 
 See appendix\ \@ref(ap:user-space) for how to write and compile applications for the emulated processor, recommended compilation settings, and more.
+
+#### Instruction encoding
+
+Instructions are encoded in a structured manner in 32 bits\ [@rv5vol1, chapter 24].
+Groups of similar instruction follow similar patterns.
+Structure in some instructions is "sacrificed" for the sake of structure in others.
+Examples of this are the branching instructions with *immediate offsets* (offset encoded directly into instruction, as opposed to being fetched from a register), one of which is shown in figure\ \@ref(fig:ifuckinghatethis).
+
+```{r ifuckinghatethis, fig.cap='The encoding structure of a conditional branch instruction such as BEQ or BNE', out.width='100%'}
+knitr::include_graphics(normalizePath('fig/cond-branch.pdf'))
+```
+
+All instruction have an **opcode** in the seven last bits of the 32-bit instruction.
+This code does not fully define the instruction and is more a marker of instruction *type*.
+The **opcode**s Gotos uses are: **op-imm**, **lui**, **auipc**, **op**, **jal**, **jalr**, **branch**, **load**, **store**, **misc-mem**, **system**, **amo**, **load-fp**, **store-fp**, **op-fp**, **fmadd**, **fmsub**, **fnmsub**, and **fnmadd**.
+
+Some of these codes are single instructions (e.g. **lui** or **fnmsub**); others require more information (e.g. **op** or **system**).
+For those instructions that require more information, they include a **funct3** or **funct7** -- and in some cases, even **funct12**\ [@rv5vol1, section 2.8] -- field which specifies the instruction further\ [@rv5vol1, section 2.2, 2.3].
 
 ### The RISC-V privileged architecture
 
@@ -80,7 +98,7 @@ We implement only a few of these registers:
 - **mepc**, **mcause**, and **mtval**, which are used for trap setup and handling, and
 - **satp**, a register that controls virtual memory addressing and protection.
 
-While we could likely avoid using CSRs completely, we chose to use them to stay as close as possible to the specification.
+While we could avoid using CSRs completely, we implement them to stay as close as possible to the specification.
 
 ### Instruction fetch and execute
 
@@ -89,7 +107,6 @@ After checking interrupts, it both fetches and executes in the same cycle.
 Instructions are guaranteed to complete in the order they are fetched.
 
 Instruction fetch is no different from other reads from memory and goes through the same pipeline of translation and cache lookup.
-
 
 ### Floating-point numbers {#arch:floating-point}
 
@@ -101,7 +118,6 @@ While we implement *some* version of floating-point numbers, we do not comply fu
 
 We imagine that any real use of floating-point numbers would be in performance critical applications such as in a real-time game.
 We accept the compromise of a non-compliant implementation for the sake of improved performance.
-
 
 ### Atomic operations {#arch:atomics}
 
@@ -133,13 +149,31 @@ Cores can not hold more than one valid reservation at a time, and reservations s
 
 Load-reserved/store-conditional has benefits and disadvantages compared to something like *compare-and-swap* and can make debugging concurrent applications especially difficult as stepping through programs may inadvertently invalidate reservations so that none of the threads can make progress.
 
-To prevent live-lock, RISC-V has architectural guarantees that a LR/SC-pair will eventually be successful as long as the SC instruction comes within 16 instructions after the LR instruction\ [@rv5vol1, section 8.2].
+To prevent live-lock, RISC-V has architectural guarantees that a LR/SC-pair will eventually be successful as long as the SC instruction comes within 16 instructions after the LR instruction\ [@rv5vol1, section 8.3].
 
 #### Reservation sets in Gotos
 
 Gotos has `ReservationSets`, which is a shared struct that tracks reservations for all cores in the system.
 Each core can have at most one reservation active at a time, and the shared struct must be locked when performing operations.
 
+### Memory synchronisation
+
+Besides atomics, RISC-V has instructions to provide certain guarantees of *observability*.
+RISC-V has a *relaxed memory model*\ [@rv5vol1, page 27].
+Where some architectures may require that different cores snoop on other cores' data/address-lines to synchronise caches, RISC-V uses special instructions to ensure that a write in one core is observable in other cores in the system.
+
+These are called *fences* or *memory barriers* and they place ordering constraints on memory operations before and after the instruction, hence the name fence.
+The specification does not place any restrictions or requirements for *how* these fences may be implemented other than that the rules of observability are followed\ [@rv5vol1, section 2.7].
+
+Fences apply only to one core, meaning they cannot be used to achieve atomics.
+They are useful when synchronisation is required, but the actual signalling of the synchronisation should be handled using atomics.
+An example of this is a lock that uses `amoswap` (atomic swap) to acquire a mutex, then uses a `fence` to ensure the processor is reading the latest data (as changes may have been made by other cores that held the mutex).
+A corresponding release function would call `fence` one last time to ensure data is written back to main memory after modifying data behind a mutex.
+
+To prevent excessive flushing or invalidation, a fence may be modified to only order operations before or after the fence such that our lock/release becomes: (1) lock, invalidate cache; (2) only writeback, don't invalidate, then release mutex.
+
+Gotos currently uses a conservative implementation and fully flushes and invalidates the cache on every `fence`.
+We chose this approach as it is the safest and is guaranteed to be correct ^[Correct in the sense that, while performance may be impacted, execution is well-defined.].
 
 ### Memory protection, attributes, and virtualisation {#sec:mem-virt}
 
@@ -187,14 +221,14 @@ The Sv32 format is the only format supported on 32-bit RISC-V processors\ [@rv5v
 It is a two-level page-table format that divides virtual addresses into three parts: **vpn1** (10b), **vpn0** (10b), and **page offset** (12b) (see figure\ \@ref(fig:03-sv32addr)).
 The *virtual page number* (VPN) is split in two (**vpn1** and **vpn0**) as each part is used to index into a different level in the page table.
 
-```{r 03-sv32addr, fig.cap='Segments of a virtual address in the Sv32 format.', }
+```{r 03-sv32addr, fig.cap='Segments of a virtual address in the Sv32 format.', out.width="50%"}
 knitr::include_graphics(normalizePath('fig/sv32addr.pdf'))
 ```
 
 A "level" in this page-table format always takes up a full page and is aligned on a page/frame boundary.
 Page-table entries (PTEs) are 32 bits and pages/frames are 4096 bits, meaning a level contains 1024 entries, which fits with the 10 bits per level of the **vpnX**.
 
-```{r 03-sv32pte, fig.cap='A RISC-V Sv32 PTE. The first 22 bits are the physical frame number; the last 10 bits are for different flags.', }
+```{r 03-sv32pte, fig.cap='A RISC-V Sv32 PTE. The first 22 bits are the physical frame number; the last 10 bits are for different flags.', out.width="60%" }
 knitr::include_graphics(normalizePath('fig/pte.pdf'))
 ```
 
@@ -251,8 +285,7 @@ knitr::include_graphics(normalizePath('fig/ex10.pdf'))
 ### The program counter/instruction pointer
 
 The program counter usually advances by 4 bytes after each cycle, pointing to the next instruction.
-The exceptions are for jumps caused by branches or by unconditional jumps, or traps.
-
+The exceptions are for jumps caused by control-flow instructions such as branches and jumps, and for traps (which are jumps to system-code).
 
 ### Traps {#arch:trap}
 
@@ -294,8 +327,6 @@ The `trap` function used in the emulator is shown in listing\ \@ref(lst:03-trap)
 
 The first two lines are part of the trap setup; the third line ensures that the processor will not automatically update the program counter after finishing; the fourth line calls the actual `HandleTrap(c)`, more about this in the next chapter; and the last line restores the program counter.
 
-
-
 (ref:cap-03-trap) The `trap` function used in Gotos.
 
 ```{.go #lst:03-trap caption="(ref:cap-03-trap)"}
@@ -308,12 +339,8 @@ func (c *Core) trap(reason uint32) {
 }
 ```
 
-
-
 Listing\ \@ref(lst:03-yield) shows a practical example of a trap-handler which returns control to the program that caused it.
 It accomplishes this by fetching the original address, then writing the address of the next instruction to ensure that execution continues as normal.
-
-
 
 (ref:cap-03-breakpoint) The simplest possible handler for a trap caused by a process executing `ebreak`.
 
@@ -322,4 +349,12 @@ func (s *System) handleBreakpoint(c *cpu.Core) {
     trapAddress := c.GetCSR(cpu.Csr_MEPC)
     c.SetCSRc(cpu.Csr_MEPC, trapAddress+4)
 }
+```
+
+The `ecall`-instruction (environment call) will usually be the method of choice for intentionally causing a trap; e.g. when performing a system call.
+Here is a short piece of assembly which, when assembled and run on the emulator, will call the `exit` system call (provided the implementation follow guidelines put forth in this document):
+
+```{.asm}
+li    a0, 1  # load system call number
+ecall        # cause trap
 ```

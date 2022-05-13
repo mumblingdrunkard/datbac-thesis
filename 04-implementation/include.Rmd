@@ -20,11 +20,14 @@ The code can be found on GitHub\ @github-gotos, or on GitLab\ @gitlab-gotos unde
 ```{r child='02-main-loop.Rmd'}
 ```
 
-```{r child='03-memory-controller.Rmd'}
+```{r child='03-atomics.Rmd'}
 ```
 
-```{r child='04-miscellaneous.Rmd'}
+```{r child='04-memory-controller.Rmd'}
 ```
 
-```{r child='05-examples.Rmd'}
+```{r child='05-miscellaneous.Rmd'}
+```
+
+```{r child='06-examples.Rmd'}
 ```

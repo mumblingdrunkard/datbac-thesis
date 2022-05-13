@@ -78,7 +78,7 @@ func (s *System) Start() {
 
 The function iterates over each core in the system and calls its `Start()` function.
 
-#### Core startup
+#### Core startup {#impl:startup}
 
 Core startup is slightly more complicated, but it starts with the simple function `c.Start()` as shown in listing\ \@ref(lst:corestart).
 
@@ -205,15 +205,172 @@ if !c.jumped {
 }
 ```
 
-First, the `loadInstruction` does as it name says.
-It attempts to load an instruction from the possibly virtual address given by the program counter `c.pc`.
+First, the `loadInstruction` does as it name says; it attempts to load an instruction from the (possibly virtual) address given by the program counter `c.pc`.
 If this loading fails, the function causes a trap and returns `false, 0`.
 Otherwise, if loading succeeds, it returns `true, <inst>`, where `inst` is a 32-bit unsigned integer that represents a RISC-V instruction.
 
+If successful, the instruction is passed to `execute` which will decode the instruction based on the format specified in the non-privileged specification\ [rv5vol1, chapter 24].
+
+Decoding is implemented as a tree of `switch...case` statements as shown in listing\ \@ref(lst:decode).
+The definitions of the capitalised constants are left out for brevity.
+
+```{.go #lst:decode caption="Decoding the 32-bit instruction encoding step-by-step. This is a small excerpt of the only function in the file. The function is 695 lines of this pattern."}
+// cpu/execute.go
+// inside function execute
+opcode := inst & 0x7f
+switch opcode {
+case OP:
+    funct7 := (inst >> 25) & 0x7f
+    switch funct7 {
+    case OP_A:
+        funct3 := (inst >> 12) & 0x7
+        switch funct3 {
+        case ADD:
+            c.add(inst)
+        case SLL:
+            c.sll(inst)
+        // ...
+        }
+    }
+case OP_IMM:
+    funct3 := (inst >> 12) & 0x7
+    case ADDI:
+        c.addi(inst)
+    // ...
+// ...
+}
+```
+
+Note how the value of `inst` is passed to the actual instruction such as in `c.add(inst)`.
+We could have made each instruction avoid parsing arguments themselves and instead write each instruction so that it would take arguments such as `rs1`, `rs2`, and `imm`.
+We decided against this however, as it made the code difficult to follow.
+Preserving the value of `inst` through the entire process makes it easier to implement every instruction as an isolated unit.
+
+Instructions are implemented across files depending on which RISC-V extension they come from (see section\ \@ref(arch:isa)).
+There are `r 40+15+26+26+8+6+1` implemented across seven files.
+The files are `cpu/rv32i.go`, `cpu/rv32a.go`, `cpu/rv32d.go`, `cpu/rv32f.go`, `cpu/rv32m.go`, `cpu/zicsr.go`, and `cpu/zifencei.go`.
+
+As an example, we have included the implementation of `xori` (xor immediate) in listing\ \@ref(lst:xori).
+
+```{.go #lst:xori caption="xori is a simple instruction and is easy to implement."}
+// cpu/rv32i.go
+// xor immediate
+func (c *Core) xori(inst uint32) {
+    rd := (inst >> 7) & 0x1f
+    rs1 := (inst >> 15) & 0x1f
+    imm11_0 := uint32(int32(inst) >> 20)
+    c.reg[rd] = c.reg[rs1] ^ imm11_0
+}
+```
+
+Most instructions follow this pattern.
+Some instructions will occasionally check other registers, perform special actions, or raise exceptions/traps (see section\ \@ref(impl:atomics)).
+This concludes the core loop of the emulator.
+
+### Control flow
+
+Control-flow instructions are those which conditionally, or unconditionally interact with the program counter.
+An example of such an instruction is `beq` (branch equal, see listing\ \@ref(lst:beq)) which performs a relative jump if the values of two registers match.
+
+```{.go #lst:beq caption="beq jumps to an address if two registers contain equal values. If the target address is not aligned on a 4-byte (instruction) boundary, the emulator raises a trap."}
+// cpu/rv32i.go
+// branch equal
+func (c *Core) beq(inst uint32) {
+    // decode logic ...
+    targetAddress := c.pc + offset
+    if c.reg[rs1] == c.reg[rs2] {
+        if targetAddress&0x3 != 0 {
+            c.csr[Csr_MTVAL] = targetAddress
+            c.trap(TrapInstructionAddressMisaligned)
+            return
+        }
+        c.pc = targetAddress
+        c.jumped = true
+    }
+}
+```
+
+Here, the **mtval** CSR is used to relay critical information about the failing instruction so that the operating system may properly deal with the trap.
+
 ### Traps
+
+On the topic of traps, from the `cpu`-side, they are simple.
+The most common trap-reason for a program should be that it has executed an `ecall`-instruction.
+This is a **system** instruction, implemented in a very simple manner, shown in listing\ \@ref(lst:ecall).
+
+```{.go #lst:ecall caption="ecall intentionally causes a trap with a special code."}
+// cpu/rv32i.go
+// environment call
+func (c *Core) ecall(inst uint32) {
+    c.trap(TrapEcallUMode)
+    return
+}
+
+// cpu/trap.go
+func (c *Core) trap(reason uint32) {
+    c.csr[Csr_MCAUSE] = reason
+    c.csr[Csr_MEPC] = c.pc
+    c.jumped = true
+    c.system.HandleTrap(c)
+    c.pc = c.csr[Csr_MEPC] // implicit mret
+}
+```
+
+The `trap` function handles most of this instruction for us in this case.
+Other instructions may require additional setup (usually just assigning the proper value to **mtval**) before raising a trap.
+
+`trap` sets the `c.jumped` flag so that the processor does not increment the program counter automatically.
+We do this because neither the instructions, nor the `execute` function, return any success- or error-value which we can propagate.
+A trap can be treated as a jump for all intents and purposes.
+
+### Loads and stores
+
+Load and store instructions interface with memory through the memory controller.
+The memory controller is explained in greater detail in section\ \@ref(impl:mc).
+An example of a load is given in listing\ \@ref(lst:lw).
+
+```{.go #lst:lw caption="lw loads a word from memory into register rd."}
+// load word
+func (c *Core) lw(inst uint32) {
+    // decode logic ...
+    if success, w := c.loadWord(address); success {
+        c.reg[rd] = w
+    }
+}
+```
+
+`loadWord()` is defined in `cpu/memory_controller.go` and is a wrapper for the more general `load` function defined in the same file.
 
 ### Halting
 
+Halting the processor is simple.
+By setting `c.state = coreStateNopLoop`, the core will enter a no-operation loop where it only checks interrupts and sleeps.
+`Halt()`, shown in listing\ \@ref(lst:halt), does this, but also checks what the current state of the core is, and if it is running, it signals that it is no longer actively executing.
+
+```{.go #lst:halt caption="Halting in Gotos is simple enough."}
+// cpu/core.go
+func (c *Core) Halt() {
+    if c.state == coreStateRunning {
+        c.system.WgRunning().Done()
+        c.state = coreStateNopLoop
+        return true
+    }
+}
+```
+
 ### Stopping the system
 
+Recall that the `run()` function introduced in section\ \@ref(impl:startup) checks the state of the processor in every cycle, and if the core state changes to *stopping*, the core will signal it is ending and it will break out of the loop.
+
+Once all cores in the system have signalled they have stopped, the system can safely exit.
+However, the mechanism for initiating a core to stop is contrived.
+While we could likely include a `Stop()` function that both halts, then stops the core, we have not done so.
+
+Instead, what we do is allow the system to send an interrupt with a special code, telling the core to shut down.
+When all cores have been informed to shut down, the system can wait on `s.wgAwake` to ensure all cores are in fact shut down before returning.
+
 ### System run
+
+`Run()` is a shorthand function that (1) starts all cores, (2) waits for all cores to halt, (3) sends a stop-signal to all cores, and (4) waits for all cores to stop.
+Waiting for all cores to halt done by waiting on `s.wgRunning`.
+The stop-signal is sent by raising an interrupt from the system (see section\ \@ref(impl:ipi)).
