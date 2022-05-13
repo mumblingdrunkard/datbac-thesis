@@ -5,6 +5,15 @@ Figure\ \@ref(fig:04-core) shows that the memory controller controls the caches 
 
 ### Load and store
 
+Even though the load and store functions are accessed directly from the core, e.g. `c.loadWord()`, we group them under the memory controller as they are implemented in `cpu/memory_controller.go`.
+It is simply for ease of implementation and ease of use that these functions are available directly from `Core`.
+
+Both load and store are too large on their own to be included here, but the general outline is:
+
+(1) translate the address,
+(1) look for the value in cache and if present, return the data,
+(1) otherwise, bring the value into cache and retry it.
+
 ### Cache
 
 All caches are implemented as fixed-size hash-maps with quadratic probing and a limited probing depth.
@@ -74,11 +83,62 @@ This function does a couple things: (0) verify that loading is aligned, (1) calc
 In the case that no matching entry is found, or the entry is found, but it is stale, return `false, 0`.
 Otherwise, return `true, v` where `v` is a 64-bit unsigned integer and the desired value is right-aligned in `v`.
 
+The function panics when misaligned access occurs.
+This is fine as it is an internal API and external consumers should not interact with it directly.
+
 There are functions for writing to cache, and for replacing cache-lines when they are not present or they are stale.
 It is up to the caller to bring data into and out from cache.
+
 Functions for invalidation and writeback are also available.
+These simply iterate through all entries in the cache and mark invalid/write back the contents.
 
 ### Translate
+
+The `translate()` function itself is too large to fit into this document, but suffice to say that it performs a lookup in the TLB, and if the desired entry is not present, it walks the page table according to the steps outlined in section\ \@ref(arch:sv32).
+It also verifies that the accessed page has the necessary flags depending on whether the access is a load, store, or an instruction fetch.
+
+If the **mode** field of the **satp** register is not set, `translate` simply returns `true, address` without any checks.
+
+Implementing the function this way means that instructions/functions elsewhere don't need to be concerned with whether memory virtualisation is enabled or not, they all call `c.translate()` in any case.
+
+The `walkTable()` function is shown in listing\ \@ref(lst:walktable).
+
+```{.go #lst:walktable caption="The walkTable function in Gotos."}
+func (c *Core) walkTable(vpn uint32) (int, uint32) {
+	satp := c.csr[Csr_SATP]
+	a := (satp & 0x003FFFFF) * pagesize
+	i := 1
+	for {
+		vpni := (vpn >> (10 * i)) & 0x3FF
+		success, pte := c.AtomicLoadWordPhysicalUncached(a + vpni*4)
+		if !success {
+			return i, 0
+		}
+
+		if pte&pageFlagValid == 0 || (pte&pageFlagRead == 0 && pte&pageFlagWrite == 1) {
+			return i, 0
+		}
+
+		if pte&pageFlagRead == 0 && pte&pageFlagExec == 0 {
+			i = i - 1
+			if i < 0 {
+				return i, 0
+			}
+			a = (pte >> 10) * pagesize
+			continue
+		}
+
+		if i > 0 && pte&0x000FFC00 != 0 {
+			return i, 0
+		}
+
+		return i, pte
+	}
+}
+```
+
+The function uses atomic loads to load data directly from memory.
+This ensures that there aren't any extra caches that need invalidation after the TLB is invalidated.
 
 ### TLB {#impl:tlb}
 

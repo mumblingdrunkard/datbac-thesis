@@ -215,7 +215,7 @@ Left-shifting the value by 12 bits will give the address of the first page in a 
 The ASID field is useful to prevent excessive flushing of TLBs as entries will be tagged with the current ASID.
 Later an `sfence.vma` instruction can specify which ASID it should apply to or even which mapping.
 
-#### The Sv32 page-table format
+#### The Sv32 page-table format {#arch:sv32}
 
 The Sv32 format is the only format supported on 32-bit RISC-V processors\ [@rv5vol2, section 4.3].
 It is a two-level page-table format that divides virtual addresses into three parts: **vpn1** (10b), **vpn0** (10b), and **page offset** (12b) (see figure\ \@ref(fig:03-sv32addr)).
