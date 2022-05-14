@@ -15,4 +15,4 @@ Using a user-mode emulator aside a high-level language to teach operating system
 Nachos implemented this exact idea and served as proof that this is a viable approach. @nachos-report
 However, since its inception in 1992, advancements have been made and operating systems now have to deal with multiple cores in a single system.
 
-We believe that we are presenting proof that a multicore emulated architecture is also possible; one that can provide the added complexity of writing a multicore operating system while staying simple enough that undergraduate students can realistically understand the fundamentals within a semester.
+We contribute empirical proof that a multicore emulated architecture is also possible; one that can provide the added complexity of writing a multicore operating system while staying simple enough that undergraduate students can realistically understand the fundamentals within a semester or two.

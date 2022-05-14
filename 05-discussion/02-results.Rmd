@@ -44,11 +44,10 @@ As far we know, Go does not currently have any guarantees about memory ordering 
 The test we used most commonly for verifying adequate multicore performance, was to create four equal, long-running processes, then executing them on a `System` with a single core, compared to one with multiple cores.
 The results are shown in listings\ \@ref(lst:scperf), and\ \@ref(lst:mcperf).
 
-```{.txt #lst:scperf caption="Four long-running processes (125M instructions each) executing on a single core." numbers=none frame=none}
+```{.txt #lst:scperf caption="Four long-running processes (125M instructions each) executing on a single core." numbers=none frame=none float=!ht}
 > time go run main.go
 [core 0]: Process 0 exited with value 0x0035C7E2 = 3524578
-[core 0]: Process 1 exited with value 0x0035C7E2 = 3524578
-[core 0]: Process 2 exited with value 0x0035C7E2 = 3524578
+...
 [core 0]: Process 3 exited with value 0x0035C7E2 = 3524578
 [core 0]: No more pcb's in queue!
 [core 0]: Machine External Interrupt - code 1, by 4
@@ -58,20 +57,14 @@ go run main.go  9.26s user 0.07s system 100% cpu 9.253 total
 
 With a single core, execution takes ~9 seconds to complete.
 
-```{.txt #lst:mcperf caption="Those same processes, but with one core for each process" numbers=none frame=none}
+```{.txt #lst:mcperf caption="Those same processes, but with one core for each process" numbers=none frame=none float=!ht}
 > time go run main.go
 [core 0]: Process 0 exited with value 0x0035C7E2 = 3524578
-[core 0]: No more pcb's in queue!
-[core 1]: Process 2 exited with value 0x0035C7E2 = 3524578
-[core 1]: No more pcb's in queue!
-[core 3]: Process 1 exited with value 0x0035C7E2 = 3524578
-[core 3]: No more pcb's in queue!
+...
 [core 2]: Process 3 exited with value 0x0035C7E2 = 3524578
 [core 2]: No more pcb's in queue!
 [core 0]: Machine External Interrupt - code 1, by 4
-[core 3]: Machine External Interrupt - code 1, by 4
-[core 1]: Machine External Interrupt - code 1, by 4
-[core 2]: Machine External Interrupt - code 1, by 4
+...
 
 go run main.go  11.11s user 0.08s system 377% cpu 2.964 total
 ```
@@ -85,6 +78,44 @@ With address translation disabled, we expect a slight decrease in running times.
 
 Note the loss in efficiency when moving to multiple cores.
 Where one core completed all tasks in $9.25$ seconds, we would expect four cores to complete in $9.25/4 = `r 9.25/4`$\ seconds; instead we see decreased efficiency.
+
+#### Atomic performance
+
+Atomics are necessarily slower than most other instructions in the system because of the way they interact with locked, shared resources (`Memory` and `ReservationSets`).
+However, their performance, when not congested are adequate.
+One interesting test is to observe behaviour when congestion occurs and multiple cores are trying to acquire the same lock.
+
+In listings\ \@ref(lst:sclocktest) and\ \@ref(lst:mclocktest) we have included a similar test as with single-core vs multi-core, but this time, the workload is a program that increments a shared counter behind a mutex in a loop.
+The loop runs 32768 times ($2^{15}$).
+
+```{.txt #lst:sclocktest caption="Here, four processes increment a shared counter, protected by a mutex. Performance is fine (though lower than with no atomics)." numbers=none frame=none float=!ht}
+> time go run main.go
+[core 0]: Process 0 exited with value 0x0000EA8C = 60044
+...
+[core 0]: Process 3 exited with value 0x00020000 = 131072
+[core 0]: No more pcb's in queue!
+[core 0]: Machine External Interrupt - code 1, by 4
+
+go run main.go  0.34s user 0.07s system 127% cpu 0.327 total
+```
+
+With a single core, execution takes ~.33 seconds to complete.
+
+```{.txt #lst:mclocktest caption="Processes sharing locks, but with one core for each process leads to severe congestion and execution grinds to a halt, reducing performance by more than an order of magnitude. In this test, the processes are reminiscient of threads of the same process instead of independent processes." numbers=none frame=none float=!ht}
+> time go run main.go
+[core 3]: Process 1 exited with value 0x0001F8EE = 129262
+...
+[core 0]: Process 0 exited with value 0x00020000 = 131072
+[core 0]: No more pcb's in queue!
+[core 1]: Machine External Interrupt - code 1, by 4
+...
+go run main.go  7.14s user 0.37s system 168% cpu 4.462 total
+```
+
+When we add cores to the system, the performance suddenly takes a severe hit, with execution taking an order of magnitude longer at ~4.46 seconds.
+
+Of course, this somewhat unrealistic MOACS (*Mother of All Congestion Scenarios*) is intentionally designed to display congestion vs no congestion and that multiple cores don't always beat a single core.
+We think that this could be interesting to show to students.
 
 ### Code quality
 

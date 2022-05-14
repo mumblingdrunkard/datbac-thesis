@@ -1,1 +1,40 @@
 ## Atomics {#impl:atomics}
+
+We have included an abbreviated version of `lr_w()` or *load reserved word* in listing\ \@ref(lst:lrw).
+
+```{.go #lst:lrw caption="Atomic instructions in Gotos interact directly with memory and reservation sets." float=!ht}
+// cpu/rv32a.go
+func (c *Core) lr_w(inst uint32) {
+    // decode logic and alignment ...
+	success, pAddr := c.translate(addr, accessTypeLoad)
+	if !success {
+		return
+	}
+	pLine := pAddr >> cacheLineOffsetBits
+	// update rset
+	c.system.Memory().Lock()
+    // read the word directly from memory
+	w := binary.LittleEndian.Uint32(
+        c.system.Memory().data[pAddr : pAddr+4])
+	c.system.Memory().Unlock()
+
+	// attempt to update value in cache, don't care about success
+	c.mc.dCache.store(pAddr, 4, uint64(w))
+    c.reg[rd] = w
+
+    hid := int(c.csr[Csr_MHARTID])
+    c.system.ReservationSets().Lock()
+    c.system.ReservationSets().unsafeRegister(hid, pLine)
+    c.system.ReservationSets().Unlock()
+}
+```
+
+This instruction translates the virtual address so that it can directly interact with physical memory.
+As mentioned, reservations are made on a cache-line so we extract the cache-line number from the physical address before moving on.
+We lock the memory before we load a single word, then we try to store that word into cache, then we assign the value to the appropriate register.
+
+This behaviour is like a reverse write-through operation.
+After this is done, we lock the reservation sets and make a reservation from our core with the appropriate cache-line number.
+
+Other atomic instructions follow this same pattern, but will make additional checks and/or invalidate reservations made by other cores.
+The other instructions also exhibit write-through behaviour, meaning when they are completed, the corresponding word in cache is going to be 

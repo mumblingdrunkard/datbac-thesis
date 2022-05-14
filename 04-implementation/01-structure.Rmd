@@ -8,7 +8,7 @@ Some system code is given in the `system` package and students should be able to
 
 The `cpu` package contains the emulator itself and interfaces for communicating with it.
 
-```{.txt #lst:filetree caption="File structure of Gotos" numbers=none frame=none}
+```{.txt #lst:filetree caption="File structure of Gotos" numbers=none frame=none float=!ht}
 +-- go.mod
 +-- main.go
 +-- c-programs
@@ -31,7 +31,7 @@ The `system` package is currently experimental and does not contain much outside
 
 `Core` is the struct which contains all the registers, controllers, and other variables that are private to a core, shown in listing\ \@ref(lst:core)
 
-```{.go #lst:core caption="The Core struct."}
+```{.go #lst:core caption="The Core struct." float=!ht}
 // in cpu/core.go
 type Core struct {
     bcm sync.Mutex
@@ -65,7 +65,7 @@ It is necessary to provide some isolation between the `cpu` and `system` package
 
 (ref:cap-04-system-interface) The `System` interface in Gotos consists of handlers and functions that should return pointers to shared resources.
 
-```{.go #lst:04-system-interface caption="(ref:cap-04-system-interface)"}
+```{.go #lst:04-system-interface caption="(ref:cap-04-system-interface)" float=!ht}
 // in cpu/interfaces.go
 type System interface {
     // handlers
@@ -80,11 +80,11 @@ type System interface {
 }
 ```
 
-```{r 04-core, fig.cap='Simple overview of the Core in Gotos, showing the main components.', }
+```{r 04-core, fig.cap='Simple overview of the Core in Gotos, showing the main components.'}
 knitr::include_graphics(normalizePath('fig/core-overview.pdf'))
 ```
 
-See section\ \@ref(sec:example-system) for an example of how the interface can be implemented and used.
+The rest of the chapter describes the minimal few system interfaces that should be or are implemented.
 When creating a new `Core` using `cpu.NewCore()`, we should pass a pointer to a struct that implements the `System` interface.
 In this way, `System` acts as a bridge between the `cpu` package and a system we might implement; it serves as a logical cutoff.
 When a core needs to perform a trap, it should call `HandleTrap()`, passing a pointer to itself as shown in\ \@ref(lst:03-trap).
@@ -108,7 +108,7 @@ Additionally, we encourage to use the semantic names defined in the RISC-V speci
 The semantic names follow a similar pattern, but also convey usage: e.g. `Reg_A0` -- an alias for `Reg_X10` -- is the first *argument register*, used for passing normal, non-floating-point function arguments.
 See file `cpu/register.go` for all names.
 
-This pattern of registers being accessible to external consumers only through named constants, applies to all internal registers: base registers through `GetIRegister`, floating-point registers through `GetFRegister`, and control status registers through `GetCSR`.
+This pattern of registers being accessible to external consumers only through named constants, applies to all internal registers: base registers through `GetIRegister()`, floating-point registers through `GetFRegister()`, and control status registers through `GetCSR()`.
 
 ### Physical memory
 
@@ -116,10 +116,10 @@ Although physical memory is already accessible to the system (because it impleme
 
 The code that runs through a trap-handler (which applies to most of the code students will be writing), runs *as if* it is executing on the core.
 It logically follows that we should access system resources from the perspective of the core.
-We provide two functions to access physical memory from the perspective of the core: `AtomicStoreWordPhysicalUncached` and `AtomicLoadWordPhysicalUncached`.
+We provide two functions to access physical memory from the perspective of the core: `AtomicStoreWordPhysicalUncached()` and `AtomicLoadWordPhysicalUncached()`.
 
 ---
 
-> These functions are intended to be used sparingly for critical cases where atomicity is required, such as when reading or updating the page table.
+> *These functions are intended to be used sparingly for critical cases where atomicity is required, such as when reading or updating the page table.*
 
 ---

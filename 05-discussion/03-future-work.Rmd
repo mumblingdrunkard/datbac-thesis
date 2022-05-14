@@ -98,7 +98,7 @@ We believe it is possible to wrap `Memory` in a way that allows a system to defi
 Because these devices would share the address space with normal memory, they could be mapped directly to user-space processes which both improves performance, and extends the capabilities of the system.
 This is similar to the point about generally modular code.
 
-Before this can happen though, physical memory protection (PMP) and physical memory attributes (PMA) (see section\ \@ref(sec:mem-virt)) should be supported and the memory controller should be improved to take these features into account when deciding whether or not to cache accesses or allow them at all.
+Before this can happen though, physical memory protection (PMP) and physical memory attributes (PMA) (see section\ \@ref(arch:mem-virt)) should be supported and the memory controller should be improved to take these features into account when deciding whether or not to cache accesses or allow them at all.
 
 Note that an implementation of this has to properly account for atomics (See section \@ref(arch:atomics)) because reservations must be invalidated when "... a store is made to the reserved region by an external device".
 
@@ -122,7 +122,7 @@ A disadvantage of Gotos is that it is bare-bones so that most everything has to 
 Our approach to developing Gotos presents both strengths and weaknesses.
 However, we believe that we can properly define the system interface to provide better interoperability, while still keeping the bare-bones, "from scratch" experience of building an operating system using Gotos.
 
-This process would involve much experimentation as well as input from experts of the field; with the goal of crafting a specification that is flexible and extensible, yet still provides a target for how a system is expected to behave.
+This process would involve much experimentation as well as input from experts in the field; with the goal of crafting a specification that is flexible and extensible, yet still provides a target for how a system is expected to behave.
 
 A properly defined system interface would allow development of a C standard library, which we expect could cut down on the effort required to integrate Gotos into more advanced OS development courses.
 

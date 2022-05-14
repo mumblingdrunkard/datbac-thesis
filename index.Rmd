@@ -49,8 +49,7 @@ lang: en
 glossaries: true # list of terms
 has-frontmatter: true
 
-documentclass: report
-papersize: a4
+documentclass: book
 fontsize: 11pt
 fontfamily: times
 
@@ -59,10 +58,12 @@ fancyhdr:
     rhead: "\\rightmark"
 
 geometry:
-  - inner=1.5in
-  - outer=1.5in
+  - inner=1.75in
+  - outer=1.25in
   - top=1.0in
-  - bottom=1.0in
+  - bottom=1.3in
+  - paperheight=297mm
+  - paperwidth=210mm
 
 float:
   placement:

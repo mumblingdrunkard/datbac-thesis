@@ -1,6 +1,6 @@
 # Discussion
 
-This chapter is reserved for more subjective discussion of thoughts and ideas and is much based on our experience in developing this project.
+This chapter is reserved for more subjective discussion of thoughts and ideas, and is much based on our experience in developing this project.
 
 ```{r child='01-justifications.Rmd'}
 ```

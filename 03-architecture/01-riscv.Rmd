@@ -59,7 +59,7 @@ Groups of similar instruction follow similar patterns.
 Structure in some instructions is "sacrificed" for the sake of structure in others.
 Examples of this are the branching instructions with *immediate offsets* (offset encoded directly into instruction, as opposed to being fetched from a register), one of which is shown in figure\ \@ref(fig:ifuckinghatethis).
 
-```{r ifuckinghatethis, fig.cap='The encoding structure of a conditional branch instruction such as BEQ or BNE', out.width='100%'}
+```{r ifuckinghatethis, fig.cap='The encoding structure of a conditional branch instruction such as BEQ or BNE.', out.width='100%'}
 knitr::include_graphics(normalizePath('fig/cond-branch.pdf'))
 ```
 
@@ -121,13 +121,14 @@ We accept the compromise of a non-compliant implementation for the sake of impro
 
 ### Atomic operations {#arch:atomics}
 
-RISC-V uses load-reserved/store-conditional primitives for atomic operations\ [@rv5vol1, chapter 8].
+RISC-V uses load-reserved/store-conditional primitives for atomic operations (sometimes called load-linked/store-conditional)\ [@rv5vol1, chapter 8].
 
 #### A bit about load-reserved/store-conditional
 
 RISC-V achieves atomicity accross multiple cores by using *reservation sets*.
 A core can perform a `lr.w` instruction which will atomically load a word, and register a reservation that subsumes the loaded bytes.
 Reservations in Gotos are tracked on a cache-line and use only physical addresses.
+Atomic instructions are only guaranteed to be atomic for aligned access.
 
 This reservation may be invalidated for a number of reasons such as:
 
@@ -175,7 +176,7 @@ To prevent excessive flushing or invalidation, a fence may be modified to only o
 Gotos currently uses a conservative implementation and fully flushes and invalidates the cache on every `fence`.
 We chose this approach as it is the safest and is guaranteed to be correct ^[Correct in the sense that, while performance may be impacted, execution is well-defined.].
 
-### Memory protection, attributes, and virtualisation {#sec:mem-virt}
+### Memory protection, attributes, and virtualisation {#arch:mem-virt}
 
 RISC-V provides several ways to set rules for memory access:
 
@@ -202,7 +203,7 @@ These regions are usually defined at design-time and are largely non-configurabl
 
 (ref:cap-03-satp) Layout of the **satp** register.
 
-```{r 03-satp, fig.cap='(ref:cap-03-satp)', }
+```{r 03-satp, fig.cap='(ref:cap-03-satp)', out.width="50%"}
 knitr::include_graphics(normalizePath('fig/satp.pdf'))
 ```
 
@@ -257,28 +258,28 @@ In these cases, appropriate page-faults are raised depending on the type of acce
 
 > **The Ex10 page-table format**
 >
-> A simpler way to explain this format is by using a smaller, but similar two-level page-table format that we will call Ex10 (example 10-bit).
-> In this format we split 10-bit virtual addresses into three pieces: **vpn1** (3b), **vpn0** (3b), and an **offset** (4b).
-> Thus, pages/frames are 16 bytes each (by the 4-bit offset).
-> We use a PTE-size of 2 bytes, meaning each page/frame can hold 8 entries, corresponding to the 3 bits of each part of the **vpnX**.
+> *A simpler way to explain this format is by using a smaller, but similar two-level page-table format that we will call Ex10 (example 10-bit).*
+> *In this format we split 10-bit virtual addresses into three pieces: **vpn1** (3b), **vpn0** (3b), and an **offset** (4b).*
+> *Thus, pages/frames are 16 bytes each (by the 4-bit offset).*
+> *We use a PTE-size of 2 bytes, meaning each page/frame can hold 8 entries, corresponding to the 3 bits of each part of the **vpnX**.*
 >
-> An Ex10 PTE consists of an 8-bit **PFN** and 8 flag bits.
+> *An Ex10 PTE consists of an 8-bit **PFN** and 8 flag bits.*
 >
-> By using a relatively small format, we can do the translation visually as shown in figure\ \@ref(fig:03-ex10).
+> *By using a relatively small format, we can do the translation visually as shown in figure\ \@ref(fig:03-ex10).*
 
 
 ```{r 03-ex10, fig.cap='An example using the Ex10 page-table format to translate a 10-bit virtual address.', out.width='5in'}
 knitr::include_graphics(normalizePath('fig/ex10.pdf'))
 ```
 
-> Here we have found the value of `v1` by following the address step by step.
-> The first level of the page-table is stored in the frame that starts at address `20`.
-> We calculate the position of the first PTE as `24` (row 2, column 4).
-> We take the **PFN** value of `04` to the next step.
-> We repeat this one more time and we find that `v1` is located at `33` (row 3, column 3) and has a value of `AB`.
+> *Here we have found the value of `v1` by following the address step by step.*
+> *The first level of the page-table is stored in the frame that starts at address `20`.*
+> *We calculate the position of the first PTE as `24` (row 2, column 4).*
+> *We take the **PFN** value of `04` to the next step.*
+> *We repeat this one more time and we find that `v1` is located at `33` (row 3, column 3) and has a value of `AB`.*
 >
-> Notice that while virtual addresses are only 10 bits, the resulting physical address can be as large as 12 bits (8-bit frame number and 4-bit offset).
-> This is the case for Sv32 as well which translates 32-bit virtual addresses to 34-bit physical addresses, meaning a full 16GiB can be in use, even though processes can only map 4GiB.
+> *Notice that while virtual addresses are only 10 bits, the resulting physical address can be as large as 12 bits (8-bit frame number and 4-bit offset).*
+> *This is the case for Sv32 as well which translates 32-bit virtual addresses to 34-bit physical addresses, meaning a full 16GiB can be in use, even though processes can only map 4GiB.*
 
 ---
 

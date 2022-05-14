@@ -1,5 +1,0 @@
-## Examples
-
-### Example system with scheduler {#sec:example-system}
-
-### A demo program

@@ -8,22 +8,49 @@ Figure\ \@ref(fig:04-core) shows that the memory controller controls the caches 
 Even though the load and store functions are accessed directly from the core, e.g. `c.loadWord()`, we group them under the memory controller as they are implemented in `cpu/memory_controller.go`.
 It is simply for ease of implementation and ease of use that these functions are available directly from `Core`.
 
-Both load and store are too large on their own to be included here, but the general outline is:
+Both `load()` and `store()` are too large on their own to be included here, but a shortened version of `load()`, with some error checking left out, is shown in listing\ \@ref(lst:load).
 
-(1) translate the address,
-(1) look for the value in cache and if present, return the data,
-(1) otherwise, bring the value into cache and retry it.
+```{.go #lst:load caption="Loading from cached memory." float=!ht}
+// cpu/memory_controller.go
+func (c *Core) load(vAddr, width uint32) (bool, uint64) {
+    success, pAddr := c.translate(vAddr, accessTypeLoad)
+    if !success {
+        return false, 0
+    }
+    if hit, v := c.mc.dCache.load(pAddr, width); !hit {
+        lineNumber := pAddr >> cacheLineOffsetBits
+        c.system.Memory().Lock()
+        c.mc.dCache.replace(lineNumber,
+                            cacheFlagNone,
+                            c.system.Memory().data[:])
+        c.system.Memory().Unlock()
+        _, v := c.mc.dCache.load(pAddr, width) // can't fail
+        return true, v
+    } else {
+        return true, v
+    }
+}
+```
+
+The important outline of this function is
+
+(1) translate the virtual address,
+(1) attempt to load a value from the cache; if present go to (4)
+(1) on cache miss, lock the memory and replace (load) the appropriate cache line into cache; the next load cannot fail,
+(1) simply return the value.
+
+Helper functions are included for loading differently sized data such as bytes (1 byte), shorts (2 bytes), and words (4 bytes).
 
 ### Cache
 
-All caches are implemented as fixed-size hash-maps with quadratic probing and a limited probing depth.
+All caches are implemented as fixed-size hash-maps with quadratic probing and a limited probing depth\ @wikipedia-quadratic-probing.
 Hashing is naively implemented as a modulo of the indexing value.
 This means that for each cache-line, there is a limited number of slots where it can be stored.
 If all candidate slots are occupied when a cache-line needs to be stored, they are flushed back to main memory (if dirty), invalidated, and the new cache-line is loaded at the first of the candidate slots.
 
 The structs used for caches are very simple, shown in listing\ \@ref(lst:cachestruct).
 
-```{.go #lst:cachestruct caption="The cache structs in use."}
+```{.go #lst:cachestruct caption="The cache structs in use." float=!ht}
 // cpu/cache.go
 type cacheLine struct {
     number uint32
@@ -38,21 +65,17 @@ type cache struct {
 
 ---
 
-The custom hash-map performs significantly better than Go's own `map` type with the disadvantage that the number of entries is limited and there are only a certain number of slots available for each item (depending on the probe depth).
-This might lead to excessive invalidation if processes have unexpected access patterns.
-However, for "normal" usage -- where spatial and temporal locality applies -- cache performance should be more than adequate.
+> *The custom hash-map performs significantly better than Go's own `map` type with the disadvantage that the number of entries is limited and there are only a certain number of slots available for each item (depending on the probe depth).*
+> *This might lead to excessive invalidation if processes have unexpected access patterns.*
+> *However, for "normal" usage -- where spatial and temporal locality applies -- cache performance should be more than adequate.*
 
 ---
 
 An abbreviated version of the cache `load` function is shown in listing\ \@ref(lst:cacheload).
 
-```{.go #lst:cacheload caption="Loading values from cache."}
+```{.go #lst:cacheload caption="Loading values from cache." float=!ht}
 // cpu/cache.go
 func (c *cache) load(address, width uint32) (bool, uint64) {
-    if address&(width-1) != 0 {
-        panic("misaligned access to cache")
-    }
-
     lineNumber := address >> cacheLineOffsetBits
     offset := address & cacheLineOffsetMask
 
@@ -62,15 +85,12 @@ func (c *cache) load(address, width uint32) (bool, uint64) {
             if c.lines[try].flags&cacheFlagStale != 0 {
                 return false, 0
             }
-
             switch width {
             case 4:
                 return true, uint64(
                     binary.LittleEndian.Uint32(
                         c.lines[try].data[offset : offset+4]))
             // ... other cases
-            default:
-                panic("invalid load width")
             }
         }
     }
@@ -78,16 +98,18 @@ func (c *cache) load(address, width uint32) (bool, uint64) {
 }
 ```
 
-This function does a couple things: (0) verify that loading is aligned, (1) calculate the cache-line number that subsumes the address, (2) calculate the offset into the cache-line, (3) probe the cache until a matching entry is found or the probe depth is exceeded.
+This function does a couple things: (1) calculate the cache-line number that subsumes the address, (2) calculate the offset into the cache-line, (3) probe the cache until a matching entry is found or the probe depth is exceeded.
 
 In the case that no matching entry is found, or the entry is found, but it is stale, return `false, 0`.
 Otherwise, return `true, v` where `v` is a 64-bit unsigned integer and the desired value is right-aligned in `v`.
 
-The function panics when misaligned access occurs.
+The function panics when misaligned access occurs or an invalid width is passed.
 This is fine as it is an internal API and external consumers should not interact with it directly.
 
 There are functions for writing to cache, and for replacing cache-lines when they are not present or they are stale.
 It is up to the caller to bring data into and out from cache.
+`replace()` accepts a slice and expects that the slice is thread-safe to access.
+This means that when a line is loaded into cache from memory, the memory should be locked (see listing\ \@ref(lst:load) for how it is used in practice).
 
 Functions for invalidation and writeback are also available.
 These simply iterate through all entries in the cache and mark invalid/write back the contents.
@@ -95,30 +117,32 @@ These simply iterate through all entries in the cache and mark invalid/write bac
 ### Translate
 
 The `translate()` function itself is too large to fit into this document, but suffice to say that it performs a lookup in the TLB, and if the desired entry is not present, it walks the page table according to the steps outlined in section\ \@ref(arch:sv32).
+Its behaviour is similar to that of `load()` as in listing\ \@ref(lst:load).
 It also verifies that the accessed page has the necessary flags depending on whether the access is a load, store, or an instruction fetch.
 
-If the **mode** field of the **satp** register is not set, `translate` simply returns `true, address` without any checks.
+If the **mode** field of the **satp** register is not set, `translate()` simply returns `true, address` without any checks.
 
 Implementing the function this way means that instructions/functions elsewhere don't need to be concerned with whether memory virtualisation is enabled or not, they all call `c.translate()` in any case.
 
 The `walkTable()` function is shown in listing\ \@ref(lst:walktable).
 
-```{.go #lst:walktable caption="The walkTable function in Gotos."}
+```{.go #lst:walktable caption="The walkTable function in Gotos." float=!ht}
+// cpu/translate.go
 func (c *Core) walkTable(vpn uint32) (int, uint32) {
 	satp := c.csr[Csr_SATP]
 	a := (satp & 0x003FFFFF) * pagesize
 	i := 1
 	for {
 		vpni := (vpn >> (10 * i)) & 0x3FF
-		success, pte := c.AtomicLoadWordPhysicalUncached(a + vpni*4)
+		success, pte := c.AtomicLoadWordPhysicalUncached(a+vpni*4)
 		if !success {
 			return i, 0
 		}
-
-		if pte&pageFlagValid == 0 || (pte&pageFlagRead == 0 && pte&pageFlagWrite == 1) {
+		if pte&pageFlagValid == 0 ||
+            (pte&pageFlagRead == 0 &&
+            pte&pageFlagWrite == 1) {
 			return i, 0
 		}
-
 		if pte&pageFlagRead == 0 && pte&pageFlagExec == 0 {
 			i = i - 1
 			if i < 0 {
@@ -127,11 +151,9 @@ func (c *Core) walkTable(vpn uint32) (int, uint32) {
 			a = (pte >> 10) * pagesize
 			continue
 		}
-
 		if i > 0 && pte&0x000FFC00 != 0 {
 			return i, 0
 		}
-
 		return i, pte
 	}
 }
@@ -143,5 +165,5 @@ This ensures that there aren't any extra caches that need invalidation after the
 ### TLB {#impl:tlb}
 
 A similar hash-map implementation is used for the TLB as for the caches, though it has a separately configurable probe-depth and size.
-Lookup is performed on the **vpi**, the *virtual private index* which is a combination of the virtual page number and the address-space identifier (ASID) of the current process.
+Lookup is performed on the **vpi**, the *virtual private index* which is a combination of the virtual page number and the address-space identifier (ASID) (see section\ \@ref(arch:mem-virt)) of the current process.
 This means that the TLB can hold entries for the same virtual address for several processes.

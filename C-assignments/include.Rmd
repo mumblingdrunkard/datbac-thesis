@@ -44,7 +44,7 @@ Keywords are:
 
 We should provide a simple interface that can be used to implement several schedulers:
 
-```{.go}
+```{.go float=!ht}
 type Scheduler interface {
     push(pcb PCB)
     pop() PCB
@@ -134,12 +134,24 @@ There are also several lock-free approaches to data-structures that can be usefu
 
 ## Advanced - Multicore I: Adding cores
 
+This assignment should focus on simply adding cores to the system and extending the scheduler so that it can work with multiple cores.
 
+It should cover the basics of cache synchronisation and the impact of multiple cores with cached memory.
 
 ## Advanced - Multicore II: The hard stuff
 
-## Appendages
+This assignment should focus on the more difficult aspects of multicore resource management, namely *resource reclamation*.
 
-There are a couple topics which do not get any coverage in the proposed assignments:
+Reclaiming memory frames or other resources in a multicore system where translations are cached and processes execute through several threads on several cores, is difficult.
 
-- 
+Solutions can be introduced such as: all threads of a process can only run on a single core.
+This has the obvious advantage that one doesn't need to synchronise caches across cores often.
+Only when changing the core affinity of the process, does the cache need to be synchronised.
+
+In a second round, more advanced techniques can be introduced such as using TLB shootdowns to synchronise virtual memory addressing caches, or the proposal in appendix\ \@ref(ap:shootdown-alternative).
+
+## And more
+
+There are seemingly endless possibilities for expanding the assignments.
+The proposed assignments should be doable with the current implementation of Gotos, but future implementations could open up for devices, device drivers, etc.
+The sky is the limit.

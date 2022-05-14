@@ -4,15 +4,22 @@ This chapter describes the implementation of the multiple systems and sub-system
 Gotos requires Go version 1.18 or later.
 
 Most of this chapter is dedicated to describing the RISC-V emulator, which is implemented in 3500 lines of code.
+
+---
+
+> *This somewhat large size is attributed to many comments and the repetitive implementation of one function for each instruction.*
+> *The alternative is a large `switch`/`case` chain, but that would be sacrificing code readability.*
+
+---
+
 The code can be found on GitHub\ @github-gotos, or on GitLab\ @gitlab-gotos under our alias *mumblingdrunkard*.
-**Note** that the code in these repositories is likely to be slightly behind the code presented in this chapter as the code here is developed on a secret branch until this thesis is graded.
+It is an open source effort and is licenced under the traditional MIT license\ @licence-mit.
 
----
+We give only a brief overview as we cannot possibly cover every function and interaction in the system.
+Functions included here will usually leave out error/exception-handling and other "trivialities".
+Still, this overview should give an adequate explanation of the core operation of the emulator.
 
-> This somewhat large size is attributed to many comments and the repetitive implementation of one function for each instruction.
-> The alternative is a large `switch`/`case` chain, but that would be sacrificing code readability.
-
----
+For example uses, we refer to the draft included in appendix\ \@ref(ap:book).
 
 ```{r child='01-structure.Rmd'}
 ```
@@ -26,8 +33,17 @@ The code can be found on GitHub\ @github-gotos, or on GitLab\ @gitlab-gotos unde
 ```{r child='04-memory-controller.Rmd'}
 ```
 
-```{r child='05-miscellaneous.Rmd'}
+```{r child='05-interrupt-sources.Rmd'}
 ```
 
-```{r child='06-examples.Rmd'}
-```
+## Implementation summary
+
+In general we have followed a few guidelines to ensure performance stays good and the structure of the code is sound.
+
+- return early,
+- arrays over slices for critical core structures,
+- panic on misuse, and
+- semantic naming.
+
+We have also written code with students in mind.
+This means that the code should be resistant to misuse and error messages are clear and obvious when misuse leads to a panic.

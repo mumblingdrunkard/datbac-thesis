@@ -23,9 +23,6 @@ $endif$
 $if(lang)$
   $babel-lang$,
 $endif$
-$if(papersize)$
-  $papersize$paper,
-$endif$
 $for(classoption)$
   $classoption$$sep$,
 $endfor$
@@ -294,7 +291,7 @@ $endif$
 % \titlespacing*{\chapter}{0pt}{0pt}{10pt}
 
 % for code block captions
-\usepackage[width=0.7\textwidth]{caption}
+\usepackage[width=0.85\textwidth]{caption}
 \usepackage{floatrow}
 
 \DeclareNewFloatType{chunk}{placement=H, fileext=chk, name=}
@@ -347,7 +344,7 @@ $endfor$
 $endif$
 
 $if(glossaries)$
-\usepackage[acronym, symbols]{glossaries}
+\usepackage[acronym,nonumberlist]{glossaries}
 $endif$
 \usepackage[labelfont=bf]{caption}
 \usepackage{titling}
@@ -393,22 +390,46 @@ $endfor$
 \makeglossaries
 
 \setlength{\parskip}{0pt}
-\setlength{\parindent}{6pt}
+\setlength{\parindent}{16pt}
 \setlength{\floatsep}{6pt}
 \setlength{\textfloatsep}{6pt}
 \setlength{\intextsep}{6pt}
 
+\newcommand{\declaration}{
+\topskip0pt
+\vspace*{\fill}
+% remove any \\ specified in \title
+\def\\{\relax\ifhmode\unskip\fi\space\ignorespaces}
+I, \textbf{Elias Nodland}, declare that this thesis titled, ``A partially emulated multicore instructional operating system'' and the work presented in it are my own. I confirm that:
+
+\begin{itemize}
+\renewcommand{\labelitemi}{\scriptsize\(\blacksquare\)}
+\item This work was done wholly or mainly while in candidature for a bachelor's degree at the University of Stavanger.
+
+\item Where I have consulted the published work of others, this is always clearly attributed.
+
+\item Where I have quoted from the work of others, the source is always given. With the exception of such quotations, this thesis is entirely my own work.
+
+\item I have acknowledged all main sources of help.
+\end{itemize}
+\vspace*{\fill}
+}
+
 \begin{document}
+\pagenumbering{gobble}
+
+\includepdf[pages=1]{cover}
+
+\null
+\newpage
+
+\declaration
+
+\input{latex/glossary.tex}
+\input{latex/abbreviations.tex}
 
 \renewcommand{\lstlistingname}{Listing}
 \renewcommand{\lstlistlistingname}{List of \lstlistingname s}
-
-
-$if(glossaries)$
-\input{latex/glossary.tex}
-\input{latex/abbreviations.tex}
-\glsaddall
-$endif$
 
 \pretitle{
 \begin{center}
@@ -514,9 +535,8 @@ $endif$
 \end{center}
 }
 
-\pagenumbering{gobble}
-
-\includepdf[pages=1]{cover}
+%$if(glossaries)$
+%$endif$
 
 $if(title)$
 \maketitle
@@ -541,5 +561,12 @@ $body$
 $for(include-after)$
 $include-after$
 $endfor$
+
+\glsaddallunused
+\clearpage
+\pagenumbering{gobble}
+\clearpage
+\null
+\includepdf[pages=1]{back}
 \end{document}
 

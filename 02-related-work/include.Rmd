@@ -13,7 +13,7 @@ I.e. there is a single core (concurrency vs parallelism).
 Other devices can run on other host OS threads.
 A version of Nachos was supposedly previously used at UiS\ [@nielsen2019, page 11].
 
-Further development of the original Nachos project was halted in 1996, and its latest version, 4.0, has been in a perpetual beta-release since\ @wikipedia-nachos.
+Further development of the original Nachos project was halted in 1996, and its latest version, 4.0, has been in a perpetual beta-release since then\ @wikipedia-nachos.
 C++ was officially standardised in 1998 and the 2011 standard brought about large improvements to how modern code is written\ @wikipedia-cpp.
 Because of this, Nachos can be considered outdated.
 
@@ -29,9 +29,9 @@ Both user-mode and kernel-mode code compile to native instructions.
 
 Though it can execute directly on real hardware, the most common method for using Xv6 seems to be to run it atop an emulator such as QEMU\ [@qemu; @github-xv6].
 
-## Nielsen et al. 2019
+## A Teaching Framework for Lab Assignments in Operating Systems and Systems Programming
 
-An earlier bachelor's project at UiS from 2019 looked into using Biscuit\ @cutler2019 -- a research OS written with Go and assembly -- as a base to teach OS concepts\ @nielsen2019.
+An earlier bachelor's project at UiS from 2019 looked into using Biscuit -- a research OS written with Go and assembly\ @cutler2019 -- as a base to teach OS concepts\ @nielsen2019.
 
 The goal was to be able to use Go in the OS class at UiS, with the idea that Go, having garbage collection, simple syntax, and a strong standard library, would be easier for new students than a language like C or C++ as used in Xv6 or Nachos.
 

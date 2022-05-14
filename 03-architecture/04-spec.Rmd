@@ -22,8 +22,8 @@ System call numbers 4096 and above are currently unused and may be claimed for o
 
 ---
 
-Given enough development, compatibility layers can be developed that change the system interface for certain programs.
-E.g. a program may be launched in Linux-mode and all system-calls will be bitwise OR'ed with some given flag.
+> *Given enough development, compatibility layers can be developed that change the system interface for certain programs.*
+> *E.g. a program may be launched in Linux-mode and all system-calls will be bitwise OR'ed with some given flag.*
 
 ---
 
@@ -38,4 +38,5 @@ Interrupt code 2 signals a core to transition from a running state to a halting 
 Interrupt codes 1-511 are reserved for simple OS-level signals.
 Interrupt codes 512-1023 are reserved for custom use.
 Interrupt codes hex `8000_0000` to `FFFF_FFFF` are reserved for signalling a discriminating TLB shootdown; the left-most bit is set and the remaining 31 bits are intended for transmitting a 9-bit ASID and 22-bit VPN.
-Interrupt codes hex `6000_0000` to `7FFF_FFFF` are reserved for 
+Interrupt codes hex `6000_0000` to `7FFF_FFFF` are reserved for cache shootdowns where one core might need state from another core before it can do work.
+All other ranges are currently unused and may be reserved in the future.

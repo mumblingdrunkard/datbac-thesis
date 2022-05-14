@@ -3,4 +3,4 @@
 It is clear to us that Gotos is not a finished project, but it sets down a solid foundation for further development.
 Future work should focus on using it for creating real world assignments so that the experience may be refined and enhanced.
 
-
+Through this project we have learned a great deal about many different concepts that we hope to apply to further improve Gotos until it can be used by students.

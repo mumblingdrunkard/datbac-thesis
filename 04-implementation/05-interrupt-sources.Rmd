@@ -1,0 +1,115 @@
+## Interrupt sources
+
+We briefly cover the sources that can cause interrupts.
+Currently those are counters, and interprocessor interrupts.
+
+### Timers/Counters
+
+The counter implementation is simplistic.
+As shown in listing\ \@ref(lst:checkcounter), the counter is simply decremented for every step and when it reaches 0, it is disabled and a trap is raised.
+
+The entire contents of `cpu/counter.go` are shown in listing\ \@ref(lst:counter).
+
+```{.go #lst:counter caption="The counter implementation in Gotos is simplistic." float=!ht}
+// cpu/counter.go
+type counter struct {
+	enable bool
+	value  uint64
+}
+
+func (c *Core) SetCounter(v uint64) {
+	c.counter.enable = true
+	c.counter.value = v
+}
+```
+
+### Interprocessor interrupts {#impl:ipi}
+
+IPIs are implemented using a shared `InterruptMatrix` and a few helper functions: `RaiseInterrupt()`, `checkInterrupts()`, `RespondInterrupt()`, `InterruptInfo()`, and `AwaitInterruptResponse()`.
+
+#### Between cores
+
+The first step in an interrupt is the interrupt being raised by `RaiseInterrupt()` as shown in abbreviated form in listing\ \@ref(lst:raiseinterrupt).
+
+```{.go #lst:raiseinterrupt caption="Raising an interrupt from a core." float=!ht}
+// cpu/ipi.go
+type InterruptMatrix [CoresMax + 1][CoresMax + 1]uint32
+
+func (c *Core) RaiseInterrupt(coreId, code uint32) {
+    ptr := &c.system.InterruptMatrix()[coreId][thisCoreId]
+    for !atomic.CompareAndSwapUint32(ptr, 0, code) {
+        c.checkInterrupts()
+    }
+}
+```
+
+This function first gets a pointer to an entry in the interrupt matrix with the index `[toCore][fromCore]`.
+After this it continually attempts to swap the value from 0 to a non-zero value.
+This value is the interrupt code.
+
+On the receiving end, there is a core that will eventually check the interrupt matrix and find that an entry in its row of the `InterruptMatrix` is non-zero.
+This is done by `checkInterrupts()` as shown in listing\ \@ref(lst:checkinterrupts).
+
+```{.go #lst:checkinterrupts caption="Checking interrupts for a single core." float=!ht}
+// cpu/ipi.go
+func (c *Core) checkInterrupts() interrupted bool {
+    codes := &c.system.InterruptMatrix()[thisCoreID]
+    for i := 0; i < CoresMax + 1; i++ {
+        if code := atomic.LoadUint32(&codes[i]);
+                uint32(i) != thisCoreID && code != 0 {
+            c.interruptedBy = uint32(i)
+            c.interruptCode = code
+            c.trap(TrapMachineExternalInterrupt)
+            atomic.StoreUint32(&codes[i], 0)
+            interrupted = true
+        }
+    }
+    return
+}
+```
+
+This function simply iterates over the row in the `InterruptMatrix` that corresponds to the current core, atomically loading each value, and, if the value is non-zero, it sets the interrupt info and raises a trap.
+Note that a core cannot raise an interrupt on itself.
+
+Inside a potential trap-handler for this trap, one might want to respond to the interrupt.
+This is done using `RespondInterrupt()` which is included in listing\ \@ref(lst:respondinterrupt).
+
+```{.go #lst:respondinterrupt caption="Responding to the latest interrupt." float=!ht}
+// cpu/ipi.go
+func (c *Core) RespondInterrupt(code uint32) {
+    from, _ := c.InterruptInfo()
+    ptr := &c.system.InterruptMatrix()[from][from]
+    atomic.StoreUint32(ptr, code)
+}
+```
+
+Here we fetch the ID of the core that raised the interrupt, then we locate the entry `[from][from]` in the `InterruptMatrix`.
+This entry is guaranteed to be free for use because (1) a core cannot have more than one outgoing interrupt active at a time, and (2) a core cannot interrupt itself.
+We simply perform an atomic store to the address with the desired response code.
+
+Finally, back at the originating core, we can await a response from the interrupted core by continually checking the value of `[thisCore][thisCore]` in the `InterruptMatrix`.
+This is shown in listing\ \@ref(lst:awaitinterruptresponse).
+
+```{.go #lst:awaitinterruptresponse caption="Awaiting a response from an interrupt." float=!ht}
+// cpu/ipi.go
+func (c *Core) AwaitInterruptResponse() (code uint32) {
+    ptr := &c.system.InterruptMatrix()[thisID][thisID]
+    for atomic.LoadUint32(ptr) == 0 {
+        c.checkInterrupts()
+    }
+    code = atomic.LoadUint32(ptr)
+    atomic.StoreUint32(ptr, 0)
+}
+```
+
+Notice that in the functions where spinning is involved `for ...`, we `checkInterrupts()` inside.
+This has to be done so that cores don't enter a deadlocked state waiting for responses from cores that may be waiting for responses.
+
+#### System → Core
+
+There can be at most `CoresMax` cores in a system.
+However, the `InterruptMatrix` has an extra column and row.
+These are reserved for a system to interrupt a core in the system.
+The approach is the same, but the originator will be the system (likely running on the main goroutine) instead of a core.
+
+With this implementation, a system can send signals to cores at any time; for example to shut it down, or to probe it for information.
