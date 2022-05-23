@@ -42,6 +42,8 @@ WORKDIR /doc
 
 ENV OPENSSL_CONF=/dev/null
 
-# TODO figure out how to get
 CMD git clone https://${GITHUB_TOKEN}@github.com/mumblingdrunkard/datbac-thesis && \
     cd datbac-thesis && git pull && make pdf-w-glossaries
+
+# TODO figure out how to get compiled file out of container.
+# This is currently broken

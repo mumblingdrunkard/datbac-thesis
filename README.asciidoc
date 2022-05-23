@@ -2,6 +2,36 @@
 
 This is my thesis, it uses RMarkdown and a very customized pandoc template.
 
+== Abstract
+
+There are many approaches to teaching operating systems.
+Some courses have students implement a system on real hardware; others may settle for simulating components such as schedulers or virtual memory management.
+Both approaches have advantages and disadvantages.
+
+The first approach has the advantage that it can accurately reflect the challenge of implementing a real operating system, because it is a real operating system.
+The disadvantage is that students are required to deal with low-level complexities of memory management, not only for processes, but also for the operating system itself.
+
+The latter approach can avoid this by using a higher level of abstraction and a higher-level language.
+This results in a tradeoff however; reduced complexity in one place (managing kernel resources) regrettably leads to reduced complexity in other interactions.
+
+A hybrid approach is to emulate the execution of processes and implement operating system components in a language and environment that is user-friendly.
+With this approach, students can build components with access to all system calls and the libraries they may want, while also exploring interactions between components and processes.
+
+Using a user-mode emulator aside a high-level language to teach operating systems is not a novel concept, but popular implementations use only a single core.
+This is unfortunate, as multicore operating systems face other challenges than their single core counterparts.
+
+State synchronisation of virtualised resources is an example of such a challenge.
+More specifically, synchronisation of Translation Lookaside Buffers (TLBs) is a challenge that simply does not arise on single core systems.
+
+This project delivers Gotos; a framework that provides the necessary complexity that operating systems naturally deal with, but without excluding the intended audience: third-semester students at UiS.
+A multicore RISC-V emulator is included to provide the required complexity of managing actual processes with resources.
+However, the emulator only executes in user/application mode, delegating traps to the surrounding system written in a high-level, garbage-collected programming language, executing on real hardware.
+
+Implementing OS components in a high-level language simplifies kernel resource management, allowing students to focus on more fundamental concepts of processor virtualisation, limited direct execution, memory virtualisation, and protection.
+The emulator enables students to explore how their implementations affect, and are affected by real workloads.
+
+We contribute empirical proof that a multicore emulated architecture is also possible; one that can provide the added complexity of writing a multicore operating system while staying simple enough that undergraduate students can realistically understand the fundamentals within a semester or two.
+
 == Compiling this project
 
 You will need a LaTeX environment on your system. If you're on Linux, the
@@ -45,7 +75,7 @@ pdf-file should be generated as `output/_main.pdf`. This does not include the
 glossary however. If you want the glossaries, run `make pdf-final`. This
 performs two passes over the document to include the glossary list.
 
-== Using Docker
+== Using Docker (currently broken)
 
 NOTE: For preservation only, not recommended for regular use.
 
