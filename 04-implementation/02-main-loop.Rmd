@@ -184,7 +184,7 @@ if c.interruptCounter >= 100 {
 ```
 
 A counter is associated with this process so that cores do not check external interrupts every cycle.
-The `checkInterrupts()` function is costly (see section\ \@ref(impl:ipi) and by only checking it every few cycles, we negate most of that cost.
+The `checkInterrupts()` function is costly (see section\ \@ref(impl:ipi)) and by only checking it every few cycles, we negate most of that cost.
 
 #### Instruction fetch, decode, and execute
 
@@ -201,7 +201,7 @@ if !success {
 c.execute(inst)
 
 if !c.jumped {
-    c.pc
+    c.pc += 4
 }
 ```
 
@@ -209,7 +209,9 @@ First, the `loadInstruction()` does as its name says; it attempts to load an ins
 If this loading fails, the function causes a trap and returns `false, 0`.
 Otherwise, if loading succeeds, it returns `true, inst`, where `inst` is a 32-bit unsigned integer that represents a RISC-V instruction.
 
-If successful, the instruction is passed to `execute()` which will decode the instruction based on the format specified in the non-privileged specification\ [rv5vol1, chapter 24].
+If successful, the instruction is passed to `execute()` which will decode the instruction based on the format specified in the non-privileged specification\ [@rv5vol1, chapter 24].
+Execution may cause the `c.jumped` flag to be set.
+In this case, the program counter will not be incremented.
 
 Decoding is implemented as a tree of `switch...case` statements as shown in listing\ \@ref(lst:decode).
 The definitions of the capitalised constants are left out for brevity.
@@ -247,7 +249,7 @@ We decided against this however, as it made the code difficult to follow.
 Preserving the value of `inst` through the entire process makes it easier to implement every instruction as an isolated unit.
 
 Instructions are implemented across files depending on which RISC-V extension they come from (see section\ \@ref(arch:isa)).
-There are `r 40+15+26+26+8+6+1` implemented across seven files.
+There are `r 40+15+26+26+8+6+1` instructions implemented across seven files.
 The files are `cpu/rv32i.go`, `cpu/rv32a.go`, `cpu/rv32d.go`, `cpu/rv32f.go`, `cpu/rv32m.go`, `cpu/zicsr.go`, and `cpu/zifencei.go`.
 
 As an example, we have included the implementation of `xori()` (xor immediate) in listing\ \@ref(lst:xori).

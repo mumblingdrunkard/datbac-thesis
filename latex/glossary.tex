@@ -121,3 +121,33 @@
     name=mhartid,
     description={Machine Hart ID is a control status register containing the identity of this RISC-V hart/core}
 }
+
+\newglossaryentry{alignment} {
+    name=Aligned access,
+    description={Access to a data type through an address that is a multiple of the size of the type; e.g. a four-byte int accessed through address 12 would be aligned}
+}
+
+\newglossaryentry{word} {
+    name=Word,
+    description={A sequence of four bytes}
+}
+
+\newglossaryentry{byte} {
+    name=Byte,
+    description={The smallest addressible size of data (eight bits for most modern systems)}
+}
+
+\newglossaryentry{short} {
+    name=Short,
+    description={A sequence of two bytes}
+}
+
+\newglossaryentry{livelock} {
+    name=Livelock,
+    description={State where threads of a process are changing state, but not making any progress; harder to detect than deadlock}
+}
+
+\newglossaryentry{deadlock} {
+    name=Deadlock,
+    description={State where all threads of a process are waiting for a resource held by a different thread, causing the program to freeze}
+}

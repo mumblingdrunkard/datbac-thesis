@@ -49,7 +49,7 @@ lang: en
 glossaries: true # list of terms
 has-frontmatter: true
 
-documentclass: book
+documentclass: report
 fontsize: 11pt
 fontfamily: times
 
@@ -58,8 +58,8 @@ fancyhdr:
     rhead: "\\rightmark"
 
 geometry:
-  - inner=1.75in
-  - outer=1.25in
+  - inner=1.5in
+  - outer=1.5in
   - top=1.0in
   - bottom=1.3in
   - paperheight=297mm

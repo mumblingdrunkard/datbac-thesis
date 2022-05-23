@@ -23,7 +23,7 @@ Is it then possible to teach the concepts of OSs with theory and practice _witho
 How early can this subject be introduced?
 
 In this thesis we present Gotos, a framework for teaching OS concepts to undergraduate students using Go, a high-level and garbage-collected language.
-We present a multicore RISC-V emulator that executes user-space code, and the abstractions and interfaces that allow students to write their own OS components in Go.
+We present a multicore emulator that executes user-space code, and the abstractions and interfaces that allow students to write their own OS components in Go.
 We also outline new challenges that arise when introducing the multicore aspect of emulation.
 
 Partially emulated instructional OSes are not a new concept, but as far as we can tell, it is still a somewhat unexplored idea to expand the concept with multicore challenges and capabilities.

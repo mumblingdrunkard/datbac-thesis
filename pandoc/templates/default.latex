@@ -150,6 +150,17 @@ $if(verbatim-in-note)$
 \VerbatimFootnotes % allow verbatim text in footnotes
 $endif$
 \usepackage[$if(geometry)$$for(geometry)$$geometry$$sep$,$endfor$$else$margin=1in$endif$]{geometry}
+\usepackage{placeins}
+\makeatletter
+\AtBeginDocument{%
+  \expandafter\renewcommand\expandafter\subsection\expandafter
+    {\expandafter\@fb@secFB\subsection}%
+  \newcommand\@fb@secFB{\FloatBarrier
+    \gdef\@fb@afterHHook{\@fb@topbarrier \gdef\@fb@afterHHook{}}}%
+  \g@addto@macro\@afterheading{\@fb@afterHHook}%
+  \gdef\@fb@afterHHook{}%
+}
+\makeatother
 $if(listings)$
 \usepackage{listings}
 \newcommand{\passthrough}[1]{#1}
@@ -418,6 +429,7 @@ I, \textbf{Elias Nodland}, declare that this thesis titled, ``A partially emulat
 \begin{document}
 \pagenumbering{gobble}
 
+\includepdf[pages=1]{frontpage}
 \includepdf[pages=1]{cover}
 
 \null
@@ -563,10 +575,7 @@ $include-after$
 $endfor$
 
 \glsaddallunused
-\clearpage
 \pagenumbering{gobble}
-\clearpage
-\null
 \includepdf[pages=1]{back}
 \end{document}
 

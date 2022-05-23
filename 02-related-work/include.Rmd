@@ -4,7 +4,7 @@ In this chapter we present previous, related, or inspiring works that have influ
 
 ## Nachos
 
-Nachos (Not Another Completely Heuristic Operating System) is a framework/system for teaching OS concepts originally developed at UC Berkeley\ @nachos-report.
+Nachos (Not Another Completely Heuristic Operating System) is a framework/system for teaching OS concepts, originally developed at UC Berkeley\ @nachos-report.
 It is centered around a user-mode MIPS\ @wikipedia-mips emulator and was originally written in C++\ @wikipedia-cpp *for* a MIPS architecture, though it has since been ported to other languages and platforms\ @nachos5j.
 
 The package also includes emulation for a storage device, an interrupt controller, and a few other miscellaneous devices.

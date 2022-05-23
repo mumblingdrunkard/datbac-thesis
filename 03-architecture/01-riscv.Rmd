@@ -1,7 +1,8 @@
 ## Processor architecture - RISC-V in Gotos
 
 The processor emulator included in Gotos serves as a basis for the framework to build on.
-It is a trivial implementation of a RISC-V emulator, supporting only a 32 bit architecture (thus omitting a number of instructions, but keeping a decent target).
+We quickly settled on RISC-V (pronounced "risk five") as a suitable *instruction set architecture* (ISA) for this emulator\ @rv5vol1.
+RISC-V, being a *reduced instruction set computer* (RISC) architecture can be implemented in relatively few lines of code as it doesn't have very many instructions.
 
 The main goal is to provide a feature-full processor that closely mimics the behaviour of real processors in single- or multicore systems, and with acceptable performance.
 For these reasons, we omit multiple details of the RISC-V specification, opting for only those features that are relevant and required for OS development.
@@ -23,8 +24,7 @@ It also specifies several extensions that add capabilities such as floating-poin
 
 #### The G extension
 
-The G extension is a collective extension used to refer to the IMAFDZicsr Zifencei extensions all together.
-Intended as a reasonable target for applications running on modern systems:
+The G extension is a collective extension used to refer to the IMAFDZicsr Zifencei extensions all together; intended as a reasonable target for applications running on modern systems:
 
 - I, the base RISC-V instruction set of 40 instructions, contains the bare minimum for many applications such as addition and subtraction, and control-flow instructions.
 - M, extension for multiplication and division.
@@ -42,20 +42,24 @@ Applications should not expect fully compliant floats.
 We expect students will not be writing many of their own applications as most applications used for testing the operating system should already be provided by the labs.
 Still, the G extension provides a solid base to build on and it should be possible to use the emulator to teach basic assembly if desired.
 
-However, test-applications should preferably be written only with the I, M, A, and Zifencei extensions which are enabled by default (and cannot be disabled).
-The F, D, and Zicsr extensions require more work and quality-assurance before they can be reliably used in an application and are disabled by default.
-If not enabled, instructions from these three extensions will raise a `TrapIllegalInstruction`.
+---
+
+> *Test-applications should preferably be written only with the I, M, A, and Zifencei extensions which are enabled by default (and cannot be disabled).*
+> *The F, D, and Zicsr extensions require more work and quality-assurance before they can be reliably used in an application and are disabled by default.*
+> *If not enabled, instructions from these three extensions will raise a `TrapIllegalInstruction`.*
+
+---
 
 For the Zicsr extension, note that it being disabled does not mean that the *Control and Status Register* file (*file* in this context having the computer-architecture definition\ @wikipedia-register-file) is disabled.
 This register file is required for the OS to properly work.
-The Zicsr is specifically about user-mode support for csr interaction.
+The Zicsr extension is specifically about user-mode support for CSR interaction.
 
 See appendix\ \@ref(ap:user-space) for how to write and compile applications for the emulated processor, recommended compilation settings, and more.
 
 #### Instruction encoding
 
 Instructions are encoded in a structured manner in 32 bits\ [@rv5vol1, chapter 24].
-Groups of similar instruction follow similar patterns.
+Groups of similar instructions follow similar patterns.
 Structure in some instructions is "sacrificed" for the sake of structure in others.
 Examples of this are the branching instructions with *immediate offsets* (offset encoded directly into instruction, as opposed to being fetched from a register), one of which is shown in figure\ \@ref(fig:ifuckinghatethis).
 
@@ -63,7 +67,7 @@ Examples of this are the branching instructions with *immediate offsets* (offset
 knitr::include_graphics(normalizePath('fig/cond-branch.pdf'))
 ```
 
-All instruction have an **opcode** in the seven last bits of the 32-bit instruction.
+All instructions have an **opcode** in the seven last bits of the 32-bit instruction.
 This code does not fully define the instruction and is more a marker of instruction *type*.
 The **opcode**s Gotos uses are: **op-imm**, **lui**, **auipc**, **op**, **jal**, **jalr**, **branch**, **load**, **store**, **misc-mem**, **system**, **amo**, **load-fp**, **store-fp**, **op-fp**, **fmadd**, **fmsub**, **fnmsub**, and **fnmadd**.
 
@@ -72,9 +76,9 @@ For those instructions that require more information, they include a **funct3** 
 
 ### The RISC-V privileged architecture
 
-The RISC-V specification also defines a privileged architecture.
+The RISC-V specification also defines a privileged architecture\ @rv5vol2.
 This specification contains information about what a RISC-V implementation must provide for certain software like OSes to function.
-Gotos heavily diverges from the specification at this level as the processor emulator is not intended to run full systems such as Xv6 or Linux.
+Gotos heavily diverges from the specification at this level as the processor emulator is not intended to run full systems such as Xv6\ @xv6 or Linux.
 Other projects already accomplish this task and do it with much higher efficiency and correctness.
 
 The privileged specification still serves as inspiration for several mechanisms in Gotos.
@@ -121,7 +125,7 @@ We accept the compromise of a non-compliant implementation for the sake of impro
 
 ### Atomic operations {#arch:atomics}
 
-RISC-V uses load-reserved/store-conditional primitives for atomic operations (sometimes called load-linked/store-conditional)\ [@rv5vol1, chapter 8].
+RISC-V uses load-reserved/store-conditional (LR/SC) primitives for atomic operations (sometimes called load-linked/store-conditional)\ [@rv5vol1, chapter 8].
 
 #### A bit about load-reserved/store-conditional
 
@@ -148,7 +152,7 @@ Cores can not hold more than one valid reservation at a time, and reservations s
 >
 > -- RISC-V Instruction Set Manual - Vol. I [@rv5vol1, page 50].
 
-Load-reserved/store-conditional has benefits and disadvantages compared to something like *compare-and-swap* and can make debugging concurrent applications especially difficult as stepping through programs may inadvertently invalidate reservations so that none of the threads can make progress.
+LR/SC has benefits and disadvantages compared to something like *compare-and-swap* and can make debugging concurrent applications especially difficult as stepping through programs may inadvertently invalidate reservations so that none of the threads can make progress.
 
 To prevent live-lock, RISC-V has architectural guarantees that a LR/SC-pair will eventually be successful as long as the SC instruction comes within 16 instructions after the LR instruction\ [@rv5vol1, section 8.3].
 
@@ -180,26 +184,26 @@ We chose this approach as it is the safest and is guaranteed to be correct ^[Cor
 
 RISC-V provides several ways to set rules for memory access:
 
-*Physical Memory Protection* (PMP) registers are special CSRs (\acrshort{csr}) that define rules for how physical may be accessed. This is an optional feature.
+(1) *Physical Memory Protection* (PMP) registers are special CSRs (\acrshort{csr}) that define rules for how physical may be accessed. This is an optional feature.
 
-*Physical Memory Attributes* (PMA) registers are special CSRs (\acrshort{csr}) that define attributes of regions of memory such as:
+(1) *Physical Memory Attributes* (PMA) registers are special CSRs (\acrshort{csr}) that define attributes of regions of memory such as:
 
-- which atomic operations are permitted,
-- reservation guarantees,
-- access-alignment,
-- memory-ordering,
-- coherence and cacheability, and
-- idempotency.
+    - which atomic operations are permitted,
+    - reservation guarantees,
+    - access-alignment,
+    - memory-ordering,
+    - coherence and cacheability, and
+    - idempotency.
 
-These regions are usually defined at design-time and are largely non-configurable.
+    These regions are usually defined at design-time and are largely non-configurable.
 
-*Supervisor Address Translation and Protection* (**satp**) is a special CSR (\acrshort{csr}):
+(1) *Supervisor Address Translation and Protection* (**satp**) is a special CSR:
 
-> "This register holds the **physical page number (PPN)** of the root page table, i.e., its supervisor physical address divided by 4KiB;
-> an **address space identifier (ASID)**, which facilitates address-translation fences on a per-address-space basis;
-> and the **MODE field**, which selects the current address-translation scheme."
->
-> `r tufte::quote_footer('--- The RISC-V Instruction Set Manual - Volume II: Privileged Architecture\ [@rv5vol2, section 4.1.11], emphasis: us.')`
+    > "This register holds the **physical page number (PPN)** of the root page table, i.e., its supervisor physical address divided by 4KiB;
+    > an **address space identifier (ASID)**, which facilitates address-translation fences on a per-address-space basis;
+    > and the **MODE field**, which selects the current address-translation scheme."
+    >
+    > `r tufte::quote_footer('--- The RISC-V Instruction Set Manual - Volume II: Privileged Architecture\ [@rv5vol2, section 4.1.11], emphasis: us.')`
 
 (ref:cap-03-satp) Layout of the **satp** register.
 
@@ -348,7 +352,7 @@ It accomplishes this by fetching the original address, then writing the address 
 ```{.go #lst:03-yield caption="(ref:cap-03-breakpoint)"}
 func (s *System) handleBreakpoint(c *cpu.Core) {
     trapAddress := c.GetCSR(cpu.Csr_MEPC)
-    c.SetCSRc(cpu.Csr_MEPC, trapAddress+4)
+    c.SetCSR(cpu.Csr_MEPC, trapAddress+4)
 }
 ```
 

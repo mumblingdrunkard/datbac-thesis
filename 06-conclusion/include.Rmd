@@ -3,4 +3,11 @@
 It is clear to us that Gotos is not a finished project, but it sets down a solid foundation for further development.
 Future work should focus on using it for creating real world assignments so that the experience may be refined and enhanced.
 
+When Gotos is more polished, we believe it has potential for widespread adoption by any entry- to intermediate-level OS course.
+
+We believe that partial emulation provides a "best of both worlds".
+It can reasonably be taught to undergraduate students with no prior knowledge of manual memory management, it provides necessary complexity when implementing OS components, and, with Gotos, it also provides realistic challenges faced by multicore OSs.
+
+Because everything is emulated, it is both expandable, and accessible as a platform for teaching and because it uses Go, it can run on most modern systems without any extra configuration or setup.
+
 Through this project we have learned a great deal about many different concepts that we hope to apply to further improve Gotos until it can be used by students.
