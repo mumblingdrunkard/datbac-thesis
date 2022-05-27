@@ -37,4 +37,4 @@ This behaviour is like a reverse write-through operation.
 After this is done, we lock the reservation sets and make a reservation from our core with the appropriate cache-line number.
 
 Other atomic instructions follow this same pattern, but will make additional checks and/or invalidate reservations made by other cores.
-The other instructions also exhibit write-through behaviour, meaning when they are completed, the corresponding word in cache is going to be 
+The other instructions also exhibit write-through behaviour, meaning when they are completed, the corresponding word in cache is going to be up to date.

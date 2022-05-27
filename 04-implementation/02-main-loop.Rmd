@@ -393,4 +393,4 @@ func (s *System) Stop() {
 ```
 
 We imagine most tests/examples will be workloads that eventually run to completion.
-Thus, the cores should `Halt` when they don't have any more work to do and the system will eventually 
+Thus, the cores should `Halt` when they don't have any more work to do and the system will eventually stop by itself without external input.
